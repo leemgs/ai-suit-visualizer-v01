@@ -2,8 +2,8 @@
 import pandas as pd
 import os
 import requests
-from .courtlistener import fetch_cases
-from .processor import process
+from collector.courtlistener import fetch_cases
+from collector.processor import process
 
 def build_from_api(query="artificial intelligence"):
     """

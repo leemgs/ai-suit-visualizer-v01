@@ -44,13 +44,17 @@ def get_cases(file_name: Optional[str] = Query(None, description="Name of the CS
 
 @app.get("/api/db-cases")
 def get_db_cases():
-    """Fallback to original database functionality if needed"""
+    """Fallback to original database functionality with proper connection closing"""
     conn = get_conn()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM lawsuits ORDER BY file_date DESC")
-    data = cur.fetchall()
-    conn.close()
-    return data
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM lawsuits ORDER BY file_date DESC")
+        data = cur.fetchall()
+        return {"source": "database", "count": len(data), "data": data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        conn.close()
 
 @app.get("/api/files")
 def list_data_files():

@@ -1,7 +1,6 @@
-
-from courtlistener import fetch_cases
-from processor import process
-from storage import insert_cases
+from collector.courtlistener import fetch_cases
+from collector.processor import process
+from collector.storage import insert_cases
 
 def run():
     raw = fetch_cases()
