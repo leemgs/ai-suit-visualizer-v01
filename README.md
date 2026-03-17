@@ -1,17 +1,14 @@
 # AI Litigation Intelligence Platform (MariaDB Final Version)
 
-A comprehensive system for tracking, processing, and visualizing litigation involving Artificial Intelligence companies. This platform automates the collection of legal dockets from CourtListener and serves them via a modern API, supporting both live data and historical CSV datasets.
+A comprehensive system for tracking, processing, and visualizing litigation involving Artificial Intelligence companies. This platform automates the collection of legal dockets from CourtListener and serves them via a modern interactive dashboard, supporting both live data and historical CSV datasets.
 
 ## 🖼️ Visual Preview
 
 ![Global Litigation Dashboard](image/dashboard.png)
 *AI Litigation Intelligence Platform Dashboard*
 
-![API Documentation](image/api_docs.png)
-*Standardized API Documentation (Swagger UI)*
-
-![Case Details Table](image/case_list.png)
-*Detailed Litigation Case List*
+![US Map Visualization](image/case_list.png)
+*Interactive U.S. Map of AI Litigation*
 
 ## 🚀 Quick Start (Ubuntu 24.04)
 
@@ -43,24 +40,26 @@ Start the MariaDB database and FastAPI backend using Docker Compose:
 docker compose -f docker/docker-compose.yml up -d
 ```
 *The services will be available at:*
-- **Backend API**: [http://localhost:8000](http://localhost:8000)
+- **Web Dashboard**: [http://localhost:8000](http://localhost:8000)
 - **API Docs (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
 
-## 📊 Data Collection & Visualization
+## 📊 Dashboard & Visualization
 
-The platform provides a dual-method data pipeline to build the raw datasets used by the visualizer.
+The platform features a premium web interface for visualizing AI lawsuits across the United States.
 
-#### Method 1: Live Data (CourtListener & RECAP)
-Fetches live data directly from CourtListener.com/RECAP. This is the default mode.
-- **Endpoint**: `GET /api/cases`
-- **Logic**: Uses `collector/builder.py` -> `build_from_api()`
+### Features:
+1.  **Dataset Selection**: Choose from various archived `.csv` files in the `./data/` directory.
+2.  **Temporal Filtering**: Select a specific date to view the litigation landscape at that point in time.
+3.  **Interactive U.S. Map**: 
+    *   Highlighting states with active lawsuits.
+    *   Clicking on a state directly links to the **CourtListener** docket for detailed viewing.
+4.  **Live Side Panel**: View the most recent 20 cases matching your criteria.
 
-#### Method 2: Local CSV Datasets
-Processes specific historical datasets stored in the `./data/` directory.
-- **Endpoint**: `GET /api/cases?file_name=filename.csv`
-- **Logic**: Uses `collector/builder.py` -> `build_from_csv()`
+### Data Methods:
+- **Method 1 (Live API)**: Fetches real-time data from CourtListener.
+- **Method 2 (CSV)**: Reconstructs litigation history from local datasets.
 
 ---
 
@@ -71,21 +70,7 @@ Processes specific historical datasets stored in the `./data/` directory.
 | `GET /api/cases` | Main data endpoint (Live or CSV) | `file_name` (optional) |
 | `GET /api/files` | Lists available CSV files in `./data/` | None |
 | `GET /api/db-cases`| Fetches cases currently stored in MariaDB | None |
-| `/docs` | Interactive Swagger UI | None |
-
----
-
-## ⚖️ Nature of Suit (NOS) 코드 안내
-미국 연방 법원 소송의 성격(Nature of Suit)을 분류하는 코드표입니다.
-
-| NOS 코드 | 의미 | 분류체계 |
-| :--- | :--- | :--- |
-| 820 | Copyright | 지식재산권 (Intellectual Property) |
-| 830 | Patent | 지식재산권 (Intellectual Property) |
-| 840 | Trademark | 지식재산권 (Intellectual Property) |
-| 3820 | Copyright (Special/Software) | 지식재산권 (Intellectual Property) |
-| 17:101 | Copyright Act Definitions | 지식재산권 (Intellectual Property) |
-| 820 (820:1) | Copyright - Statutory | 지식재산권 (Intellectual Property) |
+| `/` | Interactive Web Dashboard | None |
 
 ---
 
@@ -93,11 +78,11 @@ Processes specific historical datasets stored in the `./data/` directory.
 
 | Component | Technology | Description |
 | :--- | :--- | :--- |
-| **Backend** | FastAPI (Python 3.10) | REST API serving case data. |
+| **Frontend** | HTML5, CSS3, JS (Vanilla) | Modern responsive dashboard with SVG map. |
+| **Backend** | FastAPI (Python 3.10) | REST API serving case data and static files. |
 | **Database** | MariaDB 10.6 | Persistent storage for litigation metadata. |
 | **Collector** | Python Requests | Fetches data from CourtListener. |
-| **Builder** | Python / Pandas | unifies data from API/CSV for visualizer. |
-| **Orchestration** | Docker Compose | Manages containerized services. |
+| **Builder** | Python / Pandas | Unifies data from API/CSV for visualizer. |
 
 ---
 
@@ -105,13 +90,16 @@ Processes specific historical datasets stored in the `./data/` directory.
 ```text
 .
 ├── backend/            # FastAPI source code
-│   └── main.py         # API endpoints and logic
+│   └── main.py         # API endpoints and static file serving
+├── frontend/           # Web Dashboard interface
+│   ├── index.html      # Main layout
+│   ├── css/            # Style sheets (Dark mode / Glassmorphism)
+│   └── js/             # Application logic & map interaction
 ├── collector/          # Data harvesting & processing
 │   ├── main.py         # Entry point for DB ingestion
 │   ├── builder.py      # Dual-mode data constructor (API/CSV)
 │   ├── courtlistener.py# CourtListener API client
-│   ├── processor.py    # Company & metadata extraction
-│   └── storage.py      # Database injection logic
+│   └── tracker.py      # Metadata tracking logic
 ├── database/           # Database schema definitions
 ├── docker/             # Docker Compose configuration
 └── data/               # Historical datasets (.csv)
@@ -126,13 +114,14 @@ Processes specific historical datasets stored in the `./data/` directory.
 docker compose -f docker/docker-compose.yml exec mariadb mariadb -u root -ppassword ai_lawsuits
 ```
 
-### Dependency Management
-Edit `docker/docker-compose.yml` to update `pip install` commands, then:
-```bash
-docker compose -f docker/docker-compose.yml up -d --build
-```
-
-### Application Logs
+### Monitoring & Logs
 ```bash
 docker compose -f docker/docker-compose.yml logs -f
 ```
+
+### Reproducing Local Output
+To verify a specific date (e.g., March 10, 2026):
+1. Open `http://localhost:8000` in your browser.
+2. Select `aisuit_20260313.csv`.
+3. Set the date picker to `2026-03-10`.
+4. Click **Visualize**.
