@@ -4,13 +4,13 @@ A comprehensive system for tracking, processing, and visualizing litigation invo
 
 ## 🖼️ Visual Preview
 
-![Global Litigation Dashboard](file:///work/github/ai-suit-visualizer-v01/image/dashboard.png)
+![Global Litigation Dashboard](image/dashboard.png)
 *AI Litigation Intelligence Platform Dashboard*
 
-![API Documentation](file:///work/github/ai-suit-visualizer-v01/image/api_docs.png)
+![API Documentation](image/api_docs.png)
 *Standardized API Documentation (Swagger UI)*
 
-![Case Details Table](file:///work/github/ai-suit-visualizer-v01/image/case_list.png)
+![Case Details Table](image/case_list.png)
 *Detailed Litigation Case List*
 
 ## 🚀 Quick Start (Ubuntu 24.04)
