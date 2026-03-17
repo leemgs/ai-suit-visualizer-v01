@@ -3,6 +3,8 @@ import os
 import pymysql
 import pandas as pd
 from fastapi import FastAPI, Query, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from typing import Optional
 from collector.builder import build_from_api, build_from_csv
 
@@ -62,4 +64,14 @@ def list_data_files():
     data_dir = "data"
     if not os.path.exists(data_dir):
         return []
-    return [f for f in os.listdir(data_dir) if f.endswith(".csv")]
+    # Return files sorted by name descending (latest first)
+    return sorted([f for f in os.listdir(data_dir) if f.endswith(".csv")], reverse=True)
+
+# Mount frontend static files
+app.mount("/css", StaticFiles(directory="frontend/css"), name="css")
+app.mount("/js", StaticFiles(directory="frontend/js"), name="js")
+app.mount("/assets", StaticFiles(directory="frontend/assets"), name="assets")
+
+@app.get("/")
+def read_root():
+    return FileResponse("frontend/index.html")
