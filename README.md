@@ -1,7 +1,6 @@
-
 # AI Litigation Intelligence Platform (MariaDB Final Version)
 
-A comprehensive system for tracking, processing, and visualizing litigation involving Artificial Intelligence companies. This platform automates the collection of legal dockets from CourtListener and serves them via a modern API.
+A comprehensive system for tracking, processing, and visualizing litigation involving Artificial Intelligence companies. This platform automates the collection of legal dockets from CourtListener and serves them via a modern API, supporting both live data and historical CSV datasets.
 
 ## 🚀 Quick Start (Ubuntu 24.04)
 
@@ -36,25 +35,46 @@ docker compose -f docker/docker-compose.yml up -d
 - **Backend API**: [http://localhost:8000](http://localhost:8000)
 - **API Docs (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-### 4. Data Collection & Visualization Options
-The platform supports two methods for building raw data:
+---
+
+## 📊 Data Collection & Visualization
+
+The platform provides a dual-method data pipeline to build the raw datasets used by the visualizer.
 
 #### Method 1: Live Data (CourtListener & RECAP)
-By default, the API will fetch live data directly from CourtListener.com/RECAP if no file is specified.
-```bash
-# Fetch live data from API
-curl http://localhost:8000/api/cases
-```
+Fetches live data directly from CourtListener.com/RECAP. This is the default mode.
+- **Endpoint**: `GET /api/cases`
+- **Logic**: Uses `collector/builder.py` -> `build_from_api()`
 
-#### Method 2: Local CSV Files
-If you choose a file from the `./data/*.csv` directory, the visualizer will build the map from that specific file.
-```bash
-# List available data files
-curl http://localhost:8000/api/files
+#### Method 2: Local CSV Datasets
+Processes specific historical datasets stored in the `./data/` directory.
+- **Endpoint**: `GET /api/cases?file_name=filename.csv`
+- **Logic**: Uses `collector/builder.py` -> `build_from_csv()`
 
-# Fetch data from a specific CSV (e.g., aisuit_20260313.csv)
-curl "http://localhost:8000/api/cases?file_name=aisuit_20260313.csv"
-```
+---
+
+## 🛠️ API Documentation
+
+| Endpoint | Description | Parameters |
+| :--- | :--- | :--- |
+| `GET /api/cases` | Main data endpoint (Live or CSV) | `file_name` (optional) |
+| `GET /api/files` | Lists available CSV files in `./data/` | None |
+| `GET /api/db-cases`| Fetches cases currently stored in MariaDB | None |
+| `/docs` | Interactive Swagger UI | None |
+
+---
+
+## ⚖️ Nature of Suit (NOS) 코드 안내
+미국 연방 법원 소송의 성격(Nature of Suit)을 분류하는 코드표입니다.
+
+| NOS 코드 | 의미 | 분류체계 |
+| :--- | :--- | :--- |
+| 820 | Copyright | 지식재산권 (Intellectual Property) |
+| 830 | Patent | 지식재산권 (Intellectual Property) |
+| 840 | Trademark | 지식재산권 (Intellectual Property) |
+| 3820 | Copyright (Special/Software) | 지식재산권 (Intellectual Property) |
+| 17:101 | Copyright Act Definitions | 지식재산권 (Intellectual Property) |
+| 820 (820:1) | Copyright - Statutory | 지식재산권 (Intellectual Property) |
 
 ---
 
@@ -62,10 +82,11 @@ curl "http://localhost:8000/api/cases?file_name=aisuit_20260313.csv"
 
 | Component | Technology | Description |
 | :--- | :--- | :--- |
-| **Backend** | FastAPI (Python 3.10) | REST API serving case data from MariaDB. |
-| **Database** | MariaDB 10.6 | Relational storage for dockets and litigation metadata. |
-| **Collector** | Requests / Processor | Fetches data from CourtListener and identifies AI companies. |
-| **Orchestration** | Docker Compose | Manages containerized services and networking. |
+| **Backend** | FastAPI (Python 3.10) | REST API serving case data. |
+| **Database** | MariaDB 10.6 | Persistent storage for litigation metadata. |
+| **Collector** | Python Requests | Fetches data from CourtListener. |
+| **Builder** | Python / Pandas | unifies data from API/CSV for visualizer. |
+| **Orchestration** | Docker Compose | Manages containerized services. |
 
 ---
 
@@ -73,41 +94,34 @@ curl "http://localhost:8000/api/cases?file_name=aisuit_20260313.csv"
 ```text
 .
 ├── backend/            # FastAPI source code
-│   └── main.py         # API endpoints and DB connection
-├── collector/          # Data harvesting logic
-│   ├── main.py         # Entry point for data collection
-│   ├── courtlistener.py# API client for CourtListener
-│   ├── processor.py    # Company detection logic
+│   └── main.py         # API endpoints and logic
+├── collector/          # Data harvesting & processing
+│   ├── main.py         # Entry point for DB ingestion
+│   ├── builder.py      # Dual-mode data constructor (API/CSV)
+│   ├── courtlistener.py# CourtListener API client
+│   ├── processor.py    # Company & metadata extraction
 │   └── storage.py      # Database injection logic
 ├── database/           # Database schema definitions
 ├── docker/             # Docker Compose configuration
-└── data/               # Archived datasets (e.g., aisuit_20260313.csv)
+└── data/               # Historical datasets (.csv)
 ```
 
 ---
 
-## 🛠️ Maintenance & Reproduction
+## 🛠️ Maintenance
 
-### Reproducing Output
-To verify the system is working correctly:
-1. Visit `http://localhost:8000/api/cases` in your browser.
-2. You should see a JSON array of cases, including fields like `case_name`, `company`, `court`, and `file_date`.
-3. Major companies like **OpenAI**, **Google**, and **Meta** are automatically tagged in the `company` field.
-
-### Database Management
-To inspect the database manually:
+### Database Inspection
 ```bash
 docker compose -f docker/docker-compose.yml exec mariadb mariadb -u root -ppassword ai_lawsuits
 ```
 
-### Updating Dependencies
-The backend installs dependencies at startup. If you need to add more:
-1. Edit `docker/docker-compose.yml`.
-2. Update the `pip install` command.
-3. Restart the container: `docker compose -f docker/docker-compose.yml up -d --build`.
+### Dependency Management
+Edit `docker/docker-compose.yml` to update `pip install` commands, then:
+```bash
+docker compose -f docker/docker-compose.yml up -d --build
+```
 
-### Logs
-Monitor application logs for troubleshooting:
+### Application Logs
 ```bash
 docker compose -f docker/docker-compose.yml logs -f
 ```
