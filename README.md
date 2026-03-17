@@ -2,6 +2,17 @@
 
 A comprehensive system for tracking, processing, and visualizing litigation involving Artificial Intelligence companies. This platform automates the collection of legal dockets from CourtListener and serves them via a modern API, supporting both live data and historical CSV datasets.
 
+## 🖼️ Visual Preview
+
+![Global Litigation Dashboard](file:///work/github/ai-suit-visualizer-v01/image/dashboard.png)
+*AI Litigation Intelligence Platform Dashboard*
+
+![API Documentation](file:///work/github/ai-suit-visualizer-v01/image/api_docs.png)
+*Standardized API Documentation (Swagger UI)*
+
+![Case Details Table](file:///work/github/ai-suit-visualizer-v01/image/case_list.png)
+*Detailed Litigation Case List*
+
 ## 🚀 Quick Start (Ubuntu 24.04)
 
 Follow these steps to reproduce the environment and output on a fresh Ubuntu 24.04 installation.
