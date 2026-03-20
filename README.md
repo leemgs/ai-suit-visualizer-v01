@@ -5,10 +5,13 @@ A comprehensive system for tracking, processing, and visualizing litigation invo
 ## 🖼️ Visual Preview
 
 ![Global Litigation Dashboard](image/dashboard.png)
+
 *AI Litigation Intelligence Platform Dashboard*
 
 ![US Map Visualization](image/case_list.png)
+
 *Interactive U.S. Map of AI Litigation*
+
 
 ## 🚀 Quick Start (Ubuntu 24.04)
 
