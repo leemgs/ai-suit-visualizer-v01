@@ -40,7 +40,7 @@ cp database/schema.sql docker/database/
 ### 3. Launch Services
 Start the MariaDB database and FastAPI backend using Docker Compose:
 ```bash
-docker compose -f docker/docker-compose.yml up -d
+docker-compose -f docker/docker-compose.yml up -d
 ```
 *The services will be available at:*
 - **Web Dashboard**: [http://localhost:8000](http://localhost:8000)
