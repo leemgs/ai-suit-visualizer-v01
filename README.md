@@ -43,8 +43,8 @@ Start the MariaDB database and FastAPI backend using Docker Compose:
 docker-compose -f docker/docker-compose.yml up -d
 ```
 *The services will be available at:*
-- **Web Dashboard**: [http://localhost:8000](http://localhost:8000)
-- **API Docs (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Web Dashboard**: [http://localhost:8000](http://localhost:8007)
+- **API Docs (Swagger)**: [http://localhost:8000/docs](http://localhost:8007/docs)
 
 ---
 
