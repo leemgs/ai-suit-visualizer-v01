@@ -124,7 +124,7 @@ docker compose -f docker/docker-compose.yml logs -f
 
 ### Reproducing Local Output
 To verify a specific date (e.g., March 10, 2026):
-1. Open `http://localhost:8000` in your browser.
+1. Open `http://localhost:8007` in your browser.
 2. Select `aisuit_20260313.csv`.
 3. Set the date picker to `2026-03-10`.
 4. Click **Visualize**.
