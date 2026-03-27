@@ -18,4 +18,4 @@ services:
       - .:/app
     command: bash -c "pip install fastapi uvicorn pymysql pandas requests && uvicorn backend.main:app --host 0.0.0.0 --port 8000"
     ports:
-      - "8000:8000"
+      - "8007:8007"
