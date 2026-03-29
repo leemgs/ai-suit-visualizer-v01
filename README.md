@@ -1,130 +1,130 @@
-# AI Litigation Intelligence Platform (MariaDB Final Version)
+# AI 소송 인텔리전스 플랫폼 (MariaDB 최종 버전)
 
-A comprehensive system for tracking, processing, and visualizing litigation involving Artificial Intelligence companies. This platform automates the collection of legal dockets from CourtListener and serves them via a modern interactive dashboard, supporting both live data and historical CSV datasets.
+인공지능(AI) 관련 소송을 추적, 처리 및 시각화하기 위한 종합 시스템입니다. 이 플랫폼은 CourtListener에서 법적 문서를 수집하는 과정을 자동화하고, 실시간 데이터와 과거 CSV 데이터셋을 모두 지원하는 현대적인 인터랙티브 대시보드를 제공합니다.
 
-## 🖼️ Visual Preview
+## 🖼️ 시각적 미리보기
 
-![Global Litigation Dashboard](image/dashboard.png)
+![글로벌 소송 대시보드](image/dashboard.png)
 
-*AI Litigation Intelligence Platform Dashboard*
+*AI 소송 인텔리전스 플랫폼 대시보드*
 
-![US Map Visualization](image/case_list.png)
+![미국 지도 시각화](image/case_list.png)
 
-*Interactive U.S. Map of AI Litigation*
+*AI 소송의 인터랙티브 미국 지도*
 
 
-## 🚀 Quick Start (Ubuntu 24.04)
+## 🚀 빠른 시작 (Ubuntu 24.04)
 
-Follow these steps to reproduce the environment and output on a fresh Ubuntu 24.04 installation.
+새로 설치된 Ubuntu 24.04 환경에서 환경을 재현하고 결과를 확인하려면 다음 단계를 따르세요.
 
-### 1. Prerequisites
-Install Docker and Git:
+### 1. 사전 요구 사항
+Docker 및 Git 설치:
 ```bash
 sudo apt update
 sudo apt install -y docker.io docker-compose-v2 git
 sudo usermod -aG docker $USER
-# Note: You may need to restart your session for group changes to take effect.
+# 참고: 그룹 변경을 적용하려면 세션을 다시 시작해야 할 수도 있습니다.
 ```
 
-### 2. Setup Directory Structure
-Clone the repository and prepare the database initialization script:
+### 2. 디렉토리 구조 설정
+저장소를 복제하고 데이터베이스 초기화 스크립트를 준비합니다:
 ```bash
 git clone https://github.com/leemgs/ai-suit-visualizer-v01.git
 cd ai-suit-visualizer-v01
 
-# Ensure MariaDB can find the schema.sql file
+# MariaDB가 schema.sql 파일을 찾을 수 있도록 설정
 mkdir -p docker/database
 cp database/schema.sql docker/database/
 ```
 
-### 3. Launch Services
-Start the MariaDB database and FastAPI backend using Docker Compose:  
+### 3. 서비스 실행
+Docker Compose를 사용하여 MariaDB 데이터베이스와 FastAPI 백엔드를 시작합니다:  
 ```bash
 docker-compose -f docker/docker-compose.yml up -d
 ```
-*The services will be available at:*
-- **Web Dashboard**: [http://localhost:8007](http://localhost:8007)
-- **API Docs (Swagger)**: [http://localhost:8007/docs](http://localhost:8007/docs)
+*서비스는 다음 주소에서 사용할 수 있습니다:*
+- **웹 대시보드**: [http://localhost:8007](http://localhost:8007)
+- **API 문서 (Swagger)**: [http://localhost:8007/docs](http://localhost:8007/docs)
 
 ---
 
-## 📊 Dashboard & Visualization
+## 📊 대시보드 및 시각화
 
-The platform features a premium web interface for visualizing AI lawsuits across the United States.
+이 플랫폼은 미국 전역의 AI 소송을 시각화하기 위한 프리미엄 웹 인터페이스를 제공합니다.
 
-### Features:
-1.  **Dataset Selection**: Choose from various archived `.csv` files in the `./data/` directory.
-2.  **Temporal Filtering**: Select a specific date to view the litigation landscape at that point in time.
-3.  **Interactive U.S. Map**: 
-    *   Highlighting states with active lawsuits.
-    *   Clicking on a state directly links to the **CourtListener** docket for detailed viewing.
-4.  **Live Side Panel**: View the most recent 20 cases matching your criteria.
+### 주요 기능:
+1.  **데이터셋 선택**: `./data/` 디렉토리에 있는 다양한 아카이브 `.csv` 파일 중에서 선택합니다.
+2.  **시간 필터링**: 특정 날짜를 선택하여 해당 시점의 소송 현황을 확인합니다.
+3.  **인터랙티브 미국 지도**: 
+    *   활성 소송이 있는 주(State)를 강조 표시합니다.
+    *   주를 클릭하면 상세 내용을 확인할 수 있도록 **CourtListener** 사건 목록으로 직접 연결됩니다.
+4.  **실시간 사이드 패널**: 기준에 부합하는 최신 20개 사건을 확인합니다.
 
-### Data Methods:
-- **Method 1 (Live API)**: Fetches real-time data from CourtListener.
-- **Method 2 (CSV)**: Reconstructs litigation history from local datasets.
+### 데이터 방식:
+- **방법 1 (실시간 API)**: CourtListener에서 실시간 데이터를 가져옵니다.
+- **방법 2 (CSV)**: 로컬 데이터셋에서 소송 기록을 재구성합니다.
 
 ---
 
-## 🛠️ API Documentation
+## 🛠️ API 문서
 
-| Endpoint | Description | Parameters |
+| 엔드포인트 | 설명 | 파라미터 |
 | :--- | :--- | :--- |
-| `GET /api/cases` | Main data endpoint (Live or CSV) | `file_name` (optional) |
-| `GET /api/files` | Lists available CSV files in `./data/` | None |
-| `GET /api/db-cases`| Fetches cases currently stored in MariaDB | None |
-| `/` | Interactive Web Dashboard | None |
+| `GET /api/cases` | 메인 데이터 엔드포인트 (실시간 또는 CSV) | `file_name` (선택 사항) |
+| `GET /api/files` | `./data/`에 있는 사용 가능한 CSV 파일 목록 | 없음 |
+| `GET /api/db-cases`| 현재 MariaDB에 저장된 사건 목록을 가져옴 | 없음 |
+| `/` | 인터랙티브 웹 대시보드 | 없음 |
 
 ---
 
-## 🏗️ Project Architecture
+## 🏗️ 프로젝트 아키텍처
 
-| Component | Technology | Description |
+| 구성 요소 | 기술 | 설명 |
 | :--- | :--- | :--- |
-| **Frontend** | HTML5, CSS3, JS (Vanilla) | Modern responsive dashboard with SVG map. |
-| **Backend** | FastAPI (Python 3.10) | REST API serving case data and static files. |
-| **Database** | MariaDB 10.6 | Persistent storage for litigation metadata. |
-| **Collector** | Python Requests | Fetches data from CourtListener. |
-| **Builder** | Python / Pandas | Unifies data from API/CSV for visualizer. |
+| **Frontend** | HTML5, CSS3, JS (Vanilla) | SVG 지도를 포함한 현대적인 반응형 대시보드. |
+| **Backend** | FastAPI (Python 3.10) | 사건 데이터 및 정적 파일을 제공하는 REST API. |
+| **Database** | MariaDB 10.6 | 소송 메타데이터를 위한 영구 저장소. |
+| **Collector** | Python Requests | CourtListener에서 데이터를 가져옵니다. |
+| **Builder** | Python / Pandas | 시각화 도구를 위해 API/CSV 데이터를 통합합니다. |
 
 ---
 
-## 📂 Project Structure
+## 📂 프로젝트 구조
 ```text
 .
-├── backend/            # FastAPI source code
-│   └── main.py         # API endpoints and static file serving
-├── frontend/           # Web Dashboard interface
-│   ├── index.html      # Main layout
-│   ├── css/            # Style sheets (Dark mode / Glassmorphism)
-│   └── js/             # Application logic & map interaction
-├── collector/          # Data harvesting & processing
-│   ├── main.py         # Entry point for DB ingestion
-│   ├── builder.py      # Dual-mode data constructor (API/CSV)
-│   ├── courtlistener.py# CourtListener API client
-│   └── tracker.py      # Metadata tracking logic
-├── database/           # Database schema definitions
-├── docker/             # Docker Compose configuration
-└── data/               # Historical datasets (.csv)
+├── backend/            # FastAPI 소스 코드
+│   └── main.py         # API 엔드포인트 및 정적 파일 제공
+├── frontend/           # 웹 대시보드 인터페이스
+│   ├── index.html      # 메인 레이아웃
+│   ├── css/            # 스타일시트 (다크 모드 / 글래스모피즘)
+│   └── js/             # 애플리케이션 로직 및 지도 상호작용
+├── collector/          # 데이터 수집 및 처리
+│   ├── main.py         # DB 입력 엔트리 포인트
+│   ├── builder.py      # 이중 모드 데이터 생성기 (API/CSV)
+│   ├── courtlistener.py# CourtListener API 클라이언트
+│   └── tracker.py      # 메타데이터 추적 로직
+├── database/           # 데이터베이스 스키마 정의
+├── docker/             # Docker Compose 설정
+└── data/               # 과거 데이터셋 (.csv)
 ```
 
 ---
 
-## 🛠️ Maintenance
+## 🛠️ 유지 관리
 
-### Database Inspection
+### 데이터베이스 검사
 ```bash
 docker compose -f docker/docker-compose.yml exec mariadb mariadb -u root -ppassword ai_lawsuits
 ```
 
-### Monitoring & Logs
+### 모니터링 및 로그
 ```bash
 docker compose -f docker/docker-compose.yml logs -f
 ```
 
-### Reproducing Local Output
-To verify a specific date (e.g., March 10, 2026):
-1. Open `http://localhost:8007` in your browser.
-2. Select `aisuit_20260313.csv`.
-3. Set the date picker to `2026-03-10`.
-4. Click **Visualize**.
+### 로컬 결과 재현
+특정 날짜(예: 2026년 3월 10일)를 확인하려면:
+1. 브라우저에서 `http://localhost:8007`을 엽니다.
+2. `aisuit_20260313.csv`를 선택합니다.
+3. 날짜 선택기에서 `2026-03-10`으로 설정합니다.
+4. **시각화(Visualize)**를 클릭합니다.
