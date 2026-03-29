@@ -26,7 +26,6 @@ body {
     flex-direction: column;
 }
 
-/* Header & Sidebar Glassmorphism */
 header {
     height: 70px;
     background: rgba(15, 23, 42, 0.8);
@@ -36,7 +35,6 @@ header {
     align-items: center;
     justify-content: space-between;
     padding: 0 40px;
-    z-index: 100;
 }
 
 .logo {
@@ -49,7 +47,7 @@ header {
 
 .controls {
     display: flex;
-    gap: 20px;
+    gap: 15px;
     align-items: center;
 }
 
@@ -57,35 +55,23 @@ select, input[type="date"] {
     background: var(--card-bg);
     border: 1px solid var(--border);
     color: white;
-    padding: 10px 15px;
+    padding: 8px 12px;
     border-radius: 8px;
     outline: none;
-    transition: all 0.3s;
-}
-
-select:focus, input[type="date"]:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 10px var(--primary-glow);
+    font-size: 0.9rem;
 }
 
 button.visualize-btn {
     background: var(--primary);
     color: white;
     border: none;
-    padding: 10px 25px;
+    padding: 10px 20px;
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
-button.visualize-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px var(--primary-glow);
-}
-
-/* Main Layout */
 main {
     flex: 1;
     display: flex;
@@ -95,123 +81,209 @@ main {
 }
 
 .sidebar {
-    width: 350px;
+    width: 320px;
     background: var(--card-bg);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
+    border-radius: 12px;
     border: 1px solid var(--border);
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    padding: 20px;
     overflow-y: auto;
 }
 
 .map-container {
     flex: 1;
     background: var(--card-bg);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
+    border-radius: 12px;
     border: 1px solid var(--border);
-    position: relative;
     display: flex;
     flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.4);
+}
+
+.map-viewport {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    overflow: hidden;
+    position: relative;
+}
+
+.map-viewport:active {
+    cursor: grabbing;
+}
+
+#map-svg-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    transform-origin: center;
+    transition: transform 0.1s ease-out;
 }
 
 #status-display {
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-#status-display h2 {
-    font-size: 1.2rem;
-    color: var(--text-dim);
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    z-index: 10;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(15, 23, 42, 0.9), transparent);
+    padding: 10px;
+    border-radius: 12px;
 }
 
 #status-display .total-count {
-    font-size: 2.5rem;
+    font-size: 3rem;
     font-weight: 800;
     color: var(--accent);
 }
 
-/* US Map Styling */
-#us-map {
-    width: 100%;
-    height: 100%;
-    max-width: 900px;
-}
-
+/* Map Styling */
 .state {
-    fill: #2c3e50;
-    stroke: #4b5563;
-    stroke-width: 1px;
-    transition: all 0.3s;
+    fill: #1e293b;
+    stroke: #475569;
+    stroke-width: 0.8px;
+    transition: fill 0.2s, stroke 0.2s, transform 0.1s;
     cursor: pointer;
 }
 
 .state:hover {
-    fill: #3e4e5e;
+    fill: #334155;
+    stroke: var(--accent);
+    stroke-width: 1.5px;
 }
 
 .state.has-cases {
     fill: var(--primary);
-    filter: drop-shadow(0 0 5px var(--primary-glow));
+    stroke: rgba(255,255,255,0.3);
 }
 
 .state.has-cases:hover {
     fill: var(--accent);
+    stroke: white;
 }
 
-/* Tooltip & Popups */
-.tooltip {
-    position: absolute;
-    background: rgba(0, 0, 0, 0.85);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 0.9rem;
+.state-label {
+    fill: white;
+    font-size: 8px;
+    font-weight: 600;
+    text-anchor: middle;
     pointer-events: none;
-    z-index: 1000;
-    display: none;
-    border: 1px solid var(--primary);
+    user-select: none;
+    opacity: 0.7;
+    transition: opacity 0.2s;
 }
 
-.case-item {
-    background: rgba(255, 255, 255, 0.03);
+#map-svg-wrapper:hover .state-label {
+    opacity: 0.9;
+}
+
+/* Zoom Controls */
+.zoom-controls {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 100;
+}
+
+.zoom-btn {
+    width: 40px;
+    height: 40px;
+    background: rgba(30, 41, 59, 0.9);
     border: 1px solid var(--border);
-    padding: 12px;
     border-radius: 8px;
-    margin-bottom: 10px;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.2s;
+    user-select: none;
+}
+
+.zoom-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    transform: scale(1.05);
+}
+
+.zoom-btn:active {
+    transform: scale(0.95);
+}
+
+/* Modals */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    border: 1px solid var(--primary);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.close-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 10px;
+    background: var(--border);
+    color: white;
+    border: none;
+    border-radius: 6px;
     cursor: pointer;
 }
 
-.case-item:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: var(--primary);
+.modal-item {
+    padding: 15px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
 }
 
-.case-title {
-    font-weight: 600;
-    font-size: 0.95rem;
-    margin-bottom: 4px;
-    color: #fff;
+.modal-item:hover {
+    background: rgba(255,255,255,0.05);
 }
 
-.case-meta {
-    font-size: 0.8rem;
-    color: var(--text-dim);
+/* Detail Modal Details */
+.detail-header { border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px; }
+.status-badge { background: var(--primary); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+.field span { display: block; color: var(--text-dim); font-size: 0.8rem; }
+.detail-summary h4 { margin-bottom: 10px; color: var(--accent); }
+.detail-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+.btn-primary { background: var(--primary); color: white; padding: 10px 15px; border-radius: 6px; text-decoration: none; font-weight: 600; flex: 1; text-align: center; }
+.btn-secondary { background: #475569; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; }
+
+.tooltip {
+    position: absolute; background: black; color: white; padding: 5px 10px; border-radius: 4px; display: none; pointer-events: none; font-size: 0.8rem; border: 1px solid var(--primary);
 }
 
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+.case-item { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; }
+.case-item:hover { background: rgba(255,255,255,0.08); }
+.case-title { font-weight: 600; font-size: 0.9rem; }
+.case-meta { font-size: 0.75rem; color: var(--text-dim); }
 
-.animate-in {
-    animation: fadeIn 0.5s forwards;
-}
+@keyframes animateIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-in { animation: animateIn 0.4s forwards; }

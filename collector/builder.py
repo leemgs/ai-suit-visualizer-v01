@@ -24,7 +24,8 @@ def build_from_csv(file_path):
     print(f"Loading data from CSV: {file_path}")
     # Skip first 2 lines based on format: 1. Title, 2. Extraction Date
     try:
-        df = pd.read_csv(file_path, skiprows=2)
+        df = pd.read_csv(file_path, skiprows=2).fillna("")
+        df.columns = df.columns.str.strip()
     except Exception as e:
         print(f"Error reading CSV: {e}")
         return []
