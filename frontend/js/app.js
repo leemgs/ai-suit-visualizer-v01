@@ -185,6 +185,7 @@ function renderStats(total, selectedStatuses) {
 
 function renderMap(stateStats) {
     const paths = document.querySelectorAll('.state-path');
+    const labels = document.querySelectorAll('.state-label');
     
     // Find max case count for intensity scale
     const counts = Object.values(stateStats).map(c => c.length);
@@ -196,6 +197,18 @@ function renderMap(stateStats) {
         
         path.classList.remove('has-cases');
         path.style.removeProperty('--intensity');
+
+        // Find the corresponding label element
+        // We'll look for text content matching the state code
+        let labelElem = null;
+        for (const l of labels) {
+            // Get the base code (strip count if already present)
+            const text = l.textContent.split('(')[0].trim();
+            if (text === stateAbbr) {
+                labelElem = l;
+                break;
+            }
+        }
 
         if (cases.length > 0) {
             path.classList.add('has-cases');
@@ -212,10 +225,22 @@ function renderMap(stateStats) {
             // Simple tooltip simulation
             path.onmouseover = (e) => showTooltip(e, `${stateAbbr}: ${cases.length} litigation(s)`);
             path.onmouseout = hideTooltip;
+
+            // Updated label with count (Requirement #3)
+            if (labelElem) {
+                labelElem.textContent = `${stateAbbr}(${cases.length})`;
+                labelElem.classList.add('active-label');
+            }
         } else {
             path.onclick = null;
             path.onmouseover = null;
             path.onmouseout = null;
+            
+            // Reset label
+            if (labelElem) {
+                labelElem.textContent = stateAbbr;
+                labelElem.classList.remove('active-label');
+            }
         }
     });
 }
