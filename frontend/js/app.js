@@ -268,6 +268,7 @@ function showCaseDetail(c) {
     const content = document.getElementById('detail-content');
 
     const firstUrl = c.url ? c.url.split(' ')[0] : '#';
+    const isPreparing = c.status && c.status.includes("준비");
     
     content.innerHTML = `
         <div class="detail-header">
@@ -285,7 +286,14 @@ function showCaseDetail(c) {
             <p>${c.summary || "No summary available."}</p>
         </div>
         <div class="detail-actions">
-            <a href="${firstUrl}" target="_blank" class="btn-primary">View Docket on CourtListener</a>
+            ${isPreparing ? `
+                <div class="warning-box animate-in">
+                    <span class="warning-icon">⚠️</span>
+                    <span>Complaint document has not yet been uploaded to CourtListener.</span>
+                </div>
+            ` : `
+                <a href="${firstUrl}" target="_blank" class="btn-primary">View Docket on CourtListener</a>
+            `}
             <button onclick="document.getElementById('detail-modal').style.display='none'" class="btn-secondary">Close</button>
         </div>
     `;
