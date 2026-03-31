@@ -23,16 +23,47 @@ document.addEventListener('DOMContentLoaded', () => {
 async function initApp() {
     await populateFileList();
     
-    const datePicker = document.getElementById('date-picker');
-    if (!datePicker.value) {
-        datePicker.value = '2026-03-10';
-    }
+    const toggleBtn = document.getElementById('status-toggle-btn');
+    const dropdown = document.getElementById('status-dropdown');
+    
+    toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target) && e.target !== toggleBtn) {
+            dropdown.classList.remove('show');
+        }
+    });
+
+    const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateToggleBtnText);
+    });
 
     document.getElementById('visualize-btn').addEventListener('click', handleVisualize);
     
+    // Initial UI state
+    updateToggleBtnText();
+
     // Attempt an initial visualize if values are set
     if (document.getElementById('csv-select').value) {
         handleVisualize();
+    }
+}
+
+function updateToggleBtnText() {
+    const checkboxes = document.querySelectorAll('#status-dropdown input[type="checkbox"]');
+    const selected = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+    const btn = document.getElementById('status-toggle-btn');
+    
+    if (selected.length === 0) {
+        btn.textContent = "진행상태: 선택 없음";
+    } else if (selected.length === checkboxes.length) {
+        btn.textContent = "진행상태: 전체";
+    } else {
+        btn.textContent = `진행상태: ${selected[0]}${selected.length > 1 ? ' 외 ' + (selected.length - 1) : ''}`;
     }
 }
 
@@ -60,10 +91,11 @@ async function populateFileList() {
 
 async function handleVisualize() {
     const fileName = document.getElementById('csv-select').value;
-    const selectedDate = document.getElementById('date-picker').value;
+    const checkboxes = document.querySelectorAll('#status-dropdown input[type="checkbox"]');
+    const selectedStatuses = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
     
-    if (!selectedDate) {
-        alert("Please select a date first.");
+    if (selectedStatuses.length === 0) {
+        alert("적어도 하나의 진행상태를 선택해주세요.");
         return;
     }
 
@@ -83,7 +115,7 @@ async function handleVisualize() {
         const result = await response.json();
         allCases = result.data || [];
         
-        updateVisualization(allCases, selectedDate);
+        updateVisualization(allCases, selectedStatuses);
     } catch (err) {
         console.error("Error fetching case data:", err);
         alert("Failed to load data: " + err.message);
@@ -93,30 +125,18 @@ async function handleVisualize() {
     }
 }
 
-function updateVisualization(cases, dateStr) {
+function updateVisualization(cases, selectedStatuses) {
     if (!cases || !Array.isArray(cases)) {
         console.error("Invalid cases data", cases);
         return;
     }
 
-    // Parse target date properly (YYYY-MM-DD string)
-    // To avoid timezone shift, we set the time to noon
-    const targetDateObj = new Date(dateStr + "T12:00:00");
-    
-    // Filter cases:
-    // 1. Filed ON or BEFORE selected date
-    // 2. Status is NOT '종료' (Closed) - "Still Fighting"
+    // Filter cases by selected statuses
     const activeCases = cases.filter(c => {
-        if (!c.file_date) return false;
+        if (!c.status) return false;
         
-        // Date check
-        const fileDateObj = new Date(c.file_date + "T12:00:00");
-        const isBeforeSelected = fileDateObj <= targetDateObj;
-
-        // Status check (Still Fighting)
-        const isStillFighting = c.status !== '종료';
-
-        return isBeforeSelected && isStillFighting;
+        // Exact match or includes for status strings like "1심 진행중"
+        return selectedStatuses.some(s => c.status.includes(s));
     });
 
     const stateStats = {};
@@ -128,7 +148,7 @@ function updateVisualization(cases, dateStr) {
         }
     });
 
-    renderStats(activeCases.length, dateStr);
+    renderStats(activeCases.length, selectedStatuses);
     renderMap(stateStats);
     renderSidebar(activeCases);
 }
@@ -148,29 +168,42 @@ function extractState(courtText) {
     return null;
 }
 
-function renderStats(total, date) {
+function renderStats(total, selectedStatuses) {
     const display = document.getElementById('status-display');
-    const d = new Date(date + "T12:00:00");
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const formattedDate = `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+    const chipsContainer = document.getElementById('active-status-chips');
     
-    display.innerHTML = `
-        <h2>Latest U.S. Map of Copyright Suits v. AI companies</h2>
-        <div class="total-count">Total = ${total}</div>
-        <p>(${formattedDate})</p>
-    `;
+    document.querySelector('#status-display .total-count').textContent = `Total = ${total}`;
+    
+    chipsContainer.innerHTML = "";
+    selectedStatuses.forEach(s => {
+        const chip = document.createElement('span');
+        chip.className = 'status-chip';
+        chip.textContent = s;
+        chipsContainer.appendChild(chip);
+    });
 }
 
 function renderMap(stateStats) {
     const paths = document.querySelectorAll('.state-path');
+    
+    // Find max case count for intensity scale
+    const counts = Object.values(stateStats).map(c => c.length);
+    const maxCount = counts.length > 0 ? Math.max(...counts) : 1;
+
     paths.forEach(path => {
         const stateAbbr = path.id; 
         const cases = stateStats[stateAbbr] || [];
         
         path.classList.remove('has-cases');
+        path.style.removeProperty('--intensity');
+
         if (cases.length > 0) {
             path.classList.add('has-cases');
             path.setAttribute('data-count', cases.length);
+            
+            // Set heatmap intensity (0.4 to 1.0)
+            const intensity = 0.4 + (0.6 * (cases.length / maxCount));
+            path.style.setProperty('--intensity', intensity);
             
             path.onclick = () => {
                 showStateCasesModal(stateAbbr, cases);

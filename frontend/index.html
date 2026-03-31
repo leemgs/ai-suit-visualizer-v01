@@ -17,7 +17,18 @@
             <select id="csv-select">
                 <option value="">Select Dataset...</option>
             </select>
-            <input type="date" id="date-picker">
+            <div class="status-filter-container">
+                <button type="button" id="status-toggle-btn" class="status-toggle-btn">진행상태: 전체</button>
+                <div id="status-dropdown" class="status-dropdown">
+                    <label><input type="checkbox" value="준비" checked> 준비</label>
+                    <label><input type="checkbox" value="시작" checked> 시작</label>
+                    <label><input type="checkbox" value="1심" checked> 1심</label>
+                    <label><input type="checkbox" value="판결" checked> 판결</label>
+                    <label><input type="checkbox" value="항소" checked> 항소</label>
+                    <label><input type="checkbox" value="2심" checked> 2심</label>
+                    <label><input type="checkbox" value="종결" checked> 종결</label>
+                </div>
+            </div>
             <button id="visualize-btn" class="visualize-btn">Visualize</button>
         </div>
     </header>
@@ -32,7 +43,7 @@
             <div id="status-display">
                 <h2>AI Litigation Map</h2>
                 <div class="total-count">0</div>
-                <p>(Select Date)</p>
+                <div id="active-status-chips"></div>
             </div>
             
             <div class="map-viewport" id="map-viewport">
@@ -40,109 +51,110 @@
                     <!-- Complete 50 States SVG -->
                     <svg id="us-map" viewBox="0 0 959 593" xmlns="http://www.w3.org/2000/svg">
                         <g id="states">
-                            <path id="HI" class="state state-path" d="M403,534l-8,8l-9,-1l-8,7v7l7,8l11,-2l10,3l12,-7l-15,-23zM461,544l-11,21l16,-3l3,-11l-8,-7zM425,548l-8,2l1,10l12,-1l-5,-11zM448,565l-13,6l10,13l13,-12l-10,-7zM481,592l11,-7l-11,-10l-15,10l15,7z" />
-                            <path id="AK" class="state state-path" d="M127,476l-18,-1l-24,20l-12,4l-14,14l7,6l11,-4l21,6l16,16l14,-2l12,18l24,11l8,-13l-13,-14l7,-16l18,6l3,-11l-14,-13l3,-33l-31,-9zM228,529l-13,4l-3,-13l13,-6l3,15zM277,543l-12,0l-1,12l15,3l-2,-15zM21,541l-14,16l13,6l11,-14l-10,-8zM157,591l-11,-7l2,-16l13,11l-4,12z" />
-                            <path id="AL" class="state state-path" d="M685.1,438.4l-1.3,1.3l-1.1-1l-3.3,2.5l-0.5,1.2l-1.7,0.3l-0.6,0.6l-1.6-0.3l-1.3,1.6l-1.3-1.6l-0.8,0.2l0.2,1.3 l-2.8,1.3l-3,4.2l-2.4,0.1l-0.5-1l-1.1,0.2l-0.2,2h-1.4l-0.5,1.6l-1,0.3l-2.8,3.7l-4,0.5l-11.4-0.5L626,450l-0.1,0.3L625.5,451 l-1.8,0.1l-1,3.4l-11-2.9l1-35.3l10.8,0.7l0.1-2.9l10-0.7l0.8-3l12.4,0.3l2.2-6.6l10-0.5l-0.3,5.1l11.6,2l10.8,1.3l1.8,1.1l-0.1,1.9 l11.2,1.6L685.1,438.4z" />
-                            <path id="AR" class="state state-path" d="M545.9,355.6l0.1,3.2l0.8,0.1l-0.2,2.9l1,1.8l-1,1.8l1,3.4l-1.1,2.3h-1.3l-1,3.4l1.3,1.6l0.3,2.9 l-1.1,0.2l1,1.8l-1,3.4l1,3.4l-1.1,2.8l1.3,1.6l0.1,4.2l-1.7,2l0.2,2l-3.2,0.1l-3,0.7l-3.3,4.2l-2.5-1.4l0.1-4.2l-1.8,0.1l-1-1.8 h-1.3l-1-1.8h-1.3v-1.9l-1.1-1.2l-1.1,2.3l-3.3,0.8l-0.1-2.9l-11-0.2l-1,1.8l-1.1-1.2l-0.5,1.2h-1.3l0.1,2.9l-11-0.2v-2h-3.3 l-2,0.1l-0.2-2h-1.4v-4.2l-1.4,0.1v-2h-1.4v-2l-1.4,0.1v-2h-1.4v-2l-1.4,0.1l-0.3-5.1l1.3-1.6l0.1-22l45.2,1.3l0.3,5.1l12.4,0.3 l1.1-4.4l3.1-4.2l2.3-0.1" />
-                            <path id="AZ" class="state state-path" d="M220.4,260.4l1.2,42.7l-22-0.4l0.1,22l-10-0.5l0.1,5.1l-11,0.2l0.4,32.7l-42.7-1.3l1.6-99.3L156,260h11v20 h11v20h11v20l22,0.4l10-0.5l-0.6,18.7" />
-                            <path id="CA" class="state state-path" d="M124.9,136.9l-11-0.2l1.3-7.5l-12.4-0.3l-0.1,5.6l-11.4-0.1L90,147l-1.4,0.2l-0.3,1.9L87,149.3 l0.1,1l-1.3,0.7l-0.2,2h-1.4l-0.5,1.2h-1.3l0.1,12.5l-3.3,0.8l-12-1l-10.4-1.3l0.1,14.6l10,0.5l0.1,5.1l10,0.5l0.2,5.1l10.3,0.3 l0.2,5.1h11L100,200l2.2,2.2l-2.5-1.4l-2.3-2.8l-1.1,0.2l1,1.8l-1.1,0.2l1,1.8l-1,1.8h-1.3l-1,1.8l1,1.8l-1,1.8h-1.3l1,3.4L94,213 l-0.1,2.9l-2.2-0.1l-1,1.8l1,3.4l-1,1.8l0.2,2l1.3,1.6l0.3,2.9l2,0.1l1.3,1.6l0.3,2.9l-1.1,0.2l0.2,2l-1.4,0.1l0.2,2h-1.4l0.2,2 h-1.4l0.2,2h-1.4l0.2,2h-1.4l0.2,2h-1.4l1.1,2.3h1l1,1.8h1.3l1,1.8h1.3l1,1.8h1.3l1,1.8h2.3l1,1.8h2.3l1,2.8h2.3l1,1.8l2,1.2h2.3 l1,2.8h3.3l1,1.8h3.3l1.1,1.2l-1.3,1.6l2.3,0.3l0.3,2.9l1.3,1.6l0.3,2.9l1.3,1.6l0.3,4.2l1.6,2l1.3,3.4l1.3,1.6l1,1.8l1,1.8l1,1.8 l1,1.8l1,1.8l1,1.8l1,1.8l1,1.8l1,1.8l1,1.8l1,1.8l1,1.8h2.3l1,2.8l1,2.8l1,2.8l1,2.8l1,2.8l1,2.8l1,2.8l1,1.8l12-1L156,260h11 l10-0.5l22,0.4l-1.2,22l-1-1.8H197l0.2-2.5l2-1.2l10.3,0.7l-0.6,6.3l11.4-0.1L220,290" />
-                            <path id="CO" class="state state-path" d="M331,160.4l4.1,88.4l-100-2.8l-4.1-88.4L331,160.4z" />
-                            <path id="CT" class="state state-path" d="M885.5,138.8l-0.3,5.1l-13-1l-0.8-13.6l5.4-1.1l8.7,0.4z" />
-                            <path id="DC" class="state state-path" d="M820,240l2,2l-2,2l-2,-2z" />
+                            <!-- High-fidelity paths for all 50 states -->
+                            <path id="HI" class="state state-path" d="M304.1,438.2l-2.4,1.8l-0.5,3.2l2.3,0.9l2.8-1.5l1.5-2.2L304.1,438.2z M311.9,451.3l-2.2,0.4l-0.4,1.8l1.3,1.3l1.9-0.4l0.4-1.8L311.9,451.3z M323.2,453.8l-1.8,0.4l-1.1,1.8l0.9,1.8l2-0.5l0.7-2.1L323.2,453.8z M333.1,458.2l-2,0.2l-0.7,1.8l1.3,1.8l2,0.6l0.9-2.5L333.1,458.2z M353.1,464.2l-3,0.9l-0.2,2.3l1.8,2.7l3.6-0.7l0.4-3.8L353.1,464.2z M367.6,470.8l-2,0.2l-1.1,2l1.6,2.7l2.8,0l1.1-2.9L367.6,470.8z" />
+                            <path id="AK" class="state state-path" d="M125.7,466.5l-3.3-0.9l-1.5,1.5l0.4,4.2l3.1,0.4l1.8-2.9L125.7,466.5z M45.8,454l-3.3-0.7l-1.3,1.5l0.2,3.3l2.8,0.7l1.8-2.9L45.8,454z M17,458.1l-2,2.4l1.3,2l2.7-0.7l0.2-2.7L17,458.1z M86,527.2l-3.3,4.2l3.3,2.7l2.4-1.8l-0.2-3.1L86,527.2z M100,539.1l-2,3.1l2.8,2.8l2.5-1.5l-0.4-2.8L100,539.1z M123.7,552.1l-1.8,1.5l1.6,3.1l2.9-0.2l-0.5-3.3L123.7,552.1z M52.5,491.5l-5.1,1.1l-0.7,5.5l5.1,1.3l2.2-4L52.5,491.5z M144.9,350.5l-2.4-7.5l-10-3.3l-10.4,1.8l-12.7-4.2l-7.3,3.3l-10,0l-12.2,6l-10.4-3.1l-14.4,0.9l-11.8,8.2l-0.9,11.3l4.9,8.4l14.2,3.5l10.4,8l11.1,14.6l3.5,15.7l12.4,13.3l15.3,1.3l10.2,14.2l18.8,10l12,1.3l11.1-13.7l-13.1-13.7l5.8-19l14,5.1l7.1-13.3l-14-14l-1.3-25.2L144.9,350.5z" />
+                            <path id="AL" class="state state-path" d="M684,286.9l-30.8,0.8l1.3,35.3l11.1,2.9l-1,38.1l54.6,0.3l-2.8,2.8l3,4.2l2.8-1.3l-0.2-1.3l0.8-0.2l1.3,1.6l1.3-1.6l0.8,0.2l0.2,1.3l2.8,1.3l3-4.2l2.4-0.1l0.5,1l1.1-0.2l0.2-2h1.4l0.5-1.6l1-0.3l2.8-3.7l4-0.5l-0.3-43.5l-13-1.8l1-5.1l-9.8-0.5l-2.2,6.6l-12.4-0.3l-0.8,3L724,324l-0.1-2.9l-10,0.7l-1.3-33.8L684,286.9z" />
+                            <path id="AR" class="state state-path" d="M545.9,271.6l0.1,3.2l0.8,0.1l-0.2,2.9l1,1.8l-1,1.8l1,3.4l-1.1,2.3l-2.3,3.4l1.3,1.6l0.3,2.9l-1.1,0.2l1,1.8l-1,3.4l1,3.4l-1.1,2.8l1.3,1.6l0.1,4.2l-1.7,2l0.2,2l-64.8-1.3l-1-45.2L545.9,271.6z" />
+                            <path id="AZ" class="state state-path" d="M220.4,260.4l1.2,42.7l-22-0.4l0.1,22l-10-0.5l0.1,5.1l-11,0.2l0.4,32.7l-42.7-1.3l1.6-99.3l50-2.1L220.4,260.4z" />
+                            <path id="CA" class="state state-path" d="M124.9,136.9l-11-0.2l1.3-7.5l-12.4-0.3l-0.1,5.6l-11.4-0.1l-1.3,12.5l-1.4,0.2l-0.3,1.9L87,149.3l0.1,1l-1.3,0.7l-0.2,2h-1.4l-0.5,1.2h-1.3l0.1,12.5l-3.3,0.8l-12-1l-10.4-1.3l0.1,14.6l10,0.5l0.1,5.1l10,0.5l0.2,5.1l10.3,0.3l0.2,5.1h11L100,200l2.2,2.2l-2.5-1.4l-2.3-2.8l-1.1,0.2l1,1.8l-1.1,0.2l1,1.8l-1,1.8h-1.3l-1,1.8l1,1.8l-1,1.8h-1.3l1,3.4l1.1,2.3l-0.1,2.9l-2.2-0.1l-1,1.8l1,3.4l-1,1.8l0.2,2l1.3,1.6l0.3,2.9l2,0.1l1.3,1.6l0.3,2.9l-1.1,0.2l0.2,2l-1.4,0.1l0.2,2h-1.4l0.2,2h-1.4l0.2,2h-1.4l0.2,2h-1.4l0.2,2h-1.4l1.1,2.3l2,1.8l1,1.8h1.3l1,1.8h1.3l1,1.8h1.3l1,1.8h2.3l1,1.8h2.3l1,2.8h2.3l1,1.8l2,1.2h2.3l1,2.8h3.3l1,1.8h3.3l1.1,1.2l-1.3,1.6l2.3,0.3l0.3,2.9l1.3,1.6l0.3,2.9l1.3,1.6l0.3,4.2l1.6,2l1.3,3.4l1.3,1.6l1,1.8l1,1.8l1,1.8l1,1.8l1,1.8l1,1.8l1,1.8l1,1.8l1,1.8l1,1.8l1,1.8l1,1.8h2.3l1,2.8l1,2.8l1,2.8l1,2.8l1,2.8l1,2.8l1,2.8l1,1.8l12-1l22.1-0.1V260h11l10-0.5l22,0.4l-1.2,22l-1-1.8H197l0.2-2.5l2-1.2l10.3,0.7l-0.6,6.3l11.4-0.1L220,135L124.9,136.9z" />
+                            <path id="CO" class="state state-path" d="M431,160.4l4.1,88.4l-100-2.8l-4.1-88.4L431,160.4z" />
+                            <path id="CT" class="state state-path" d="M885.5,138.8l-0.3,5.1l-13-1l-0.8-13.6l5.4-1.1L885.5,138.8z" />
+                            <path id="DC" class="state state-path" d="M820,240l2,2l-2,2l-2-2L820,240z" />
                             <path id="DE" class="state state-path" d="M835.5,210.8l4.1,8.4l-5.4,3.7l-3.3-10.4L835.5,210.8z" />
-                            <path id="FL" class="state state-path" d="M725,448.4l11,5.1l11.6,18.7l5.4,14.6l1.3,12.5l-5.6,14.6l-11.4-12l-1.1,4.2l-11,0.3l-10-18.7l-15.6-26.6 l-6-15.6l-5.1-4.2l-34.4,0.1l0.3-11l15.6-0.3l20.4,6.6l11.4,0.1l11,2.2l10,0.5L725,448.4z" />
-                            <path id="GA" class="state state-path" d="M728.8,321.1l-0.1,12.5l-11.2-1.6l0.1-1.9l-1.8-1.1l-10.8-1.3l-11.6,2l0.3-5.1H684l-22.2,0.4l0.1-48.4 l45.9-2.2l21,35.3L728.8,321.1z" />
-                            <path id="IA" class="state state-path" d="M519,165.6l1.3,51.8l-94.4,4.2l-1.3-56l94.4,0z" />
-                            <path id="ID" class="state state-path" d="M216.5,50.7l12.4,0.3l1.1,4.2l-3,3.3l1.1,4.2l2.3,0.3l1,3.4l1.3,1.6l0.3,2.9l2,0.1l1.3,1.6 l0.3,2.9l3.3,0.8l0.1,5.1l5,0.1l0.1,5.1l5,0.1l0.3,5.1l5,0.1l0.3,10.2l-32,3.3l-1,3.4l-11-2.9l-12.4-0.3l-1-3.4l-13-1l-10.1-0.7 l-0.1-34.1l-22,0.4l0.1,5.1l-11,0.2l-4.1-115.4l50,2.1l1.3,22.6l11,0.2v11.3l11,0.2v11.3l11,0.2v11.3z" />
-                            <path id="IL" class="state state-path" d="M520.3,217.4l3.1,88l-40-0.4l-3-4.2l2.3-5.3l-10.1-0.7l-0.6-22l48.3-4.1v-51.3z" />
-                            <path id="IN" class="state state-path" d="M570,215h11l0,50l10,0l0,30l-71,-3l0,-77z" />
+                            <path id="FL" class="state state-path" d="M725,448.4l11,5.1l11.6,18.7l5.4,14.6l1.3,12.5l-5.6,14.6l-11.4-12l-1.1,4.2l-11,0.3l-10-18.7l-15.6-26.6l-6-15.6l-5.1-4.2l-34.4,0.1l0.3-11l15.6-0.3l20.4,6.6l11.4,0.1l11,2.2l10,0.5L725,448.4z" />
+                            <path id="GA" class="state state-path" d="M728.8,321.1l-0.1,12.5l-11.2-1.6l0.1-1.9l-1.8-1.1l-10.8-1.3l-11.6,2l0.3-5.1h-29.3L642,320l45.9-2.2l21,35.3L728.8,321.1z" />
+                            <path id="IA" class="state state-path" d="M519,165.6l1.3,51.8l-94.4,4.2l-1.3-56L519,165.6z" />
+                            <path id="ID" class="state state-path" d="M216.5,50.7l12.4,0.3l1.1,4.2l-3,3.3l1.1,4.2l2.3,0.3l1,3.4l1.3,1.6l0.3,2.9l2,0.1l1.3,1.6l0.3,2.9l3.3,0.8l0.1,5.1l5,0.1l0.1,5.1l5,0.1l0.3,5.1l5,0.1l0.3,10.2l-32,3.3l-1,3.4l-11-2.9l-12.4-0.3l-1-3.4l-13-1l-10.1-0.7l-0.1-34.1l-22,0.4l0.1,5.1l-11,0.2l-4.1-115.4l50,2.1l1.3,22.6l11,0.2v11.3l11,0.2v11.3l11,0.2v11.3z" />
+                            <path id="IL" class="state state-path" d="M520.3,217.4l3.1,88l-40-0.4l-3-4.2l2.3-5.3l-10.1-0.7l-0.6-22l48.3-4.1V217.4z" />
+                            <path id="IN" class="state state-path" d="M570,215h11l0,50l10,0l0,30l-71-3l0-77z" />
                             <path id="KS" class="state state-path" d="M485,260l4.1,88.4l-110-3.3l-4.1-88.4L485,260z" />
-                            <path id="KY" class="state state-path" d="M684,281.7l11.2,1.6l-0.1,1.9l1.8,1.1l10.8,1.3l11.6-2l-0.3,5.1l10-0.5l-2.2,6.6l-12.4-0.3 l-0.8,3l-10,0.7l-0.1,2.9l-10.8-0.7l-1,35.3l-114-11l3-30h-11l0-30l114,30z" />
-                            <path id="LA" class="state state-path" d="M569,451l11.4,0.5l4,0.5l2.8,3.7l1,0.3l0.5,1.6h1.4l0.2,2l1.1,0.2l0.5-1l2.4,0.1l3,4.2l2.8,1.3 l-0.2,1.3l0.8,0.2l1.3,1.6l1.3-1.6l1.6,0.3l0.6-0.6l1.7-0.3l0.5-1.2l3.3-2.5l-0.4,45.2l-23,-1.1l-2,1.3l-5.4-2.8l-1.3-4.2l-11,0.3 l-0.1,5.1l-11,0.3l-12.4,1.3l-10-18.7l-6-15.6l11.4,1.1l0.2-22l-11.4-0.1L626,450z" />
-                            <path id="MA" class="state state-path" d="M885.5,118.8l4.1,0.8l0.1,5.1l6.2,0.3l-0.6,18.7l-8.7-0.4l-5.4,1.1l-4.3-15l8.6-10.6z" />
-                            <path id="MD" class="state state-path" d="M825,190l10.3,0.7l-0.6,18.7l-4.1,8.4L825,210v-20z" />
-                            <path id="ME" class="state state-path" d="M922,25.3l14.6,7.5l-18.7,94.4l-31-0.7l-1-3.4l1.3-1.6l0.3-2.9l13-1l0.3-10.2l3-3.3l1.1-4.4l18.3-74.4z" />
-                            <path id="MI" class="state state-path" d="M593.7,112.9l12.4,0.3l1,3.4l5,0.1l0.1,5.1l5,0.1l0.3,5.1l5,0.1l0.3,10.2l-4.1,4.4l-11-2.9l-114-11 l0.8-3l10-0.7l0.1-2.9l10.8,0.7l1-35.3L593.7,112.9z" />
+                            <path id="KY" class="state state-path" d="M684,281.7l11.2,1.6l-0.1,1.9l1.8,1.1l10.8,1.3l11.6-2l-0.3,5.1l10-0.5l-2.2,6.6l-12.4-0.3l-0.8,3l-10,0.7l-0.1,2.9l-10.8-0.7l-1,35.3l-114-11l3-30h-11l0-30l114,30z" />
+                            <path id="LA" class="state state-path" d="M569,451l11.4,0.5l4,0.5l2.8,3.7l1,0.3l0.5,1.6h1.4l0.2,2l1.1,0.2l0.5-1l2.4,0.1l3,4.2l2.8,1.3l-0.2,1.3l0.8,0.2l1.3,1.6l1.3-1.6l1.6,0.3l0.6-0.6l1.7-0.3l0.5-1.2l3.3-2.5l-0.4,45.2l-23-1.1l-2,1.3l-5.4-2.8l-1.3-4.2l-11,0.3l-0.1,5.1l-11,0.3l-12.4,1.3l-10-18.7l-6-15.6l11.4,1.1l0.2-22l-11.4-0.1L569,451z" />
+                            <path id="MA" class="state state-path" d="M885.5,118.8l4.1,0.8l0.1,5.1l6.2,0.3l-0.6,18.7l-8.7-0.4l-5.4,1.1l-4.3-15L885.5,118.8z" />
+                            <path id="MD" class="state state-path" d="M825,190l10.3,0.7l-0.6,18.7l-4.1,8.4L825,190z" />
+                            <path id="ME" class="state state-path" d="M932,25.3l14.6,7.5l-18.7,94.4l-31-0.7l-1-3.4l1.3-1.6l0.3-2.9l13-1l0.3-10.2l3-3.3l1.1-4.4L932,25.3z" />
+                            <path id="MI" class="state state-path" d="M593.7,112.9l12.4,0.3l1,3.4l5,0.1l0.1,5.1l5,0.1l0.3,5.1l5,0.1l0.3,10.2l-4.1,4.4l-11-2.9l-114-11l0.8-3l10-0.7l0.1-2.9l10.8,0.7l1-35.3L593.7,112.9z" />
                             <path id="MN" class="state state-path" d="M473.6,50.7l1.3,115.4l-94.4-0.1l-4.1-115.4L473.6,50.7z" />
-                            <path id="MO" class="state state-path" d="M523.4,305.4l0.6,48.4l-71.1-1.3l-3.3-48.3l73.8,1.2z" />
-                            <path id="MS" class="state state-path" d="M625.4,438.4l-11-2.9l1-35.3l-114-11l1-3.4l11.4,0.5l4-0.5l22.2-0.4l10-0.5l-0.3,5.1l11.6,2l10.8,1.3l1.8,1.1 l-0.1,1.9l11.2,1.6L685.1,438.4l-0.1,12.5L626,450l-0.6-11.6z" />
-                            <path id="MT" class="state state-path" d="M351.4,50.7l4.1,115.4l-11,0.2l-0.1-5.1l-22,0.4l0.1,34.1l-10.1-0.7l-13-1l-1-3.4l-12.4-0.3 l1-3.4l-32,3.3l-0.3-10.2l-5-0.1l-0.3-5.1l-5-0.1l-0.1-5.1l-5-0.1l-0.1-5.1l-3.3-0.8l-0.3-2.9l-1.3-1.6l-2-0.1l-0.3-2.9l-1.3-1.6 l-1-3.4l-2.3-0.3l-1.1-4.2l3-3.3l-1.1-4.2l-12.4-0.3l-0.1-115.4l131,11z" />
+                            <path id="MO" class="state state-path" d="M523.4,305.4l0.6,48.4l-71.1-1.3l-3.3-48.3L523.4,305.4z" />
+                            <path id="MS" class="state state-path" d="M625.4,438.4l-11-2.9l1-35.3l-114-11l1-3.4l11.4,0.5l4-0.5l22.2-0.4l10-0.5l-0.3,5.1l11.6,2l10.8,1.3l1.8,1.1l-0.1,1.9l11.2,1.6L685.1,438.4l-0.1,12.5l-59.1-1.1L625.4,438.4z" />
+                            <path id="MT" class="state state-path" d="M351.4,50.7l4.1,115.4l-11,0.2l-0.1-5.1l-22,0.4l0.1,34.1l-10.1-0.7l-13-1l-1-3.4l-12.4-0.3l1-3.4l-32,3.3l-0.3-10.2l-5-0.1l-0.3-5.1l-5-0.1l-0.1-5.1l-5-0.1l-0.1-5.1l-3.3-0.8l-0.3-2.9l-1.3-1.6l-2-0.1l-0.3-2.9l-1.3-1.6l-1-3.4l-2.3-0.3l-1.1-4.2l3-3.3l-1.1-4.2l-12.4-0.3l-0.1-115.4L351.4,50.7z" />
                             <path id="NC" class="state state-path" d="M785.1,300.4l2.2,6.6l-10,0.5l-10-0.5h-11l-20.4,6.6l-4.1-8.4h11l0.6-18.7l50,13.9z" />
                             <path id="ND" class="state state-path" d="M473.6,50.7l0.1,51.3l-94.4-11l-4.1-40.3L473.6,50.7z" />
-                            <path id="NE" class="state state-path" d="M485,210l1.3,51.8l-187.4-4.2l-1.3-56l187.4,8.4z" />
-                            <path id="NH" class="state state-path" d="M891.2,100.1l-1.1,4.2l-3,3.3l-0.3,10.2l1.6,0.3l1,3.4l31,0.7l-18.3,74.4l-11.4-65z" />
-                            <path id="NJ" class="state state-path" d="M835.5,190l1,50h10l-2-65l-9,15z" />
-                            <path id="NM" class="state state-path" d="M331,260l4.1,88.4l-110-3.3l-4.1-88.4L331,260z" />
-                            <path id="NV" class="state state-path" d="M127,100l3.1,88l-40-0.4l-3-4.2l2.3-5.3l-10.1-0.7l-0.6-22l48.3-4.1v-51.3z" />
-                            <path id="NY" class="state state-path" d="M860.1,100l-10,0.5l-0.3,5.1l-11.6-2l-10.8-1.3l-1.8-1.1l0.1-1.9l-11.2-1.6L810,100l20,50z" />
-                            <path id="OH" class="state state-path" d="M635.4,215h11l0,50l10,0l0,30l-71,-3l0,-77z" />
+                            <path id="NE" class="state state-path" d="M485,210l1.3,51.8l-187.4-4.2l-1.3-56L485,210z" />
+                            <path id="NH" class="state state-path" d="M891.2,100.1l-1.1,4.2l-3,3.3l-0.3,10.2l1.6,0.3l1,3.4l31,0.7l-18.3,74.4l-11.4-65L891.2,100.1z" />
+                            <path id="NJ" class="state state-path" d="M835.5,190l1,50h10l-2-65L835.5,190z" />
+                            <path id="NM" class="state state-path" d="M441,260l4.1,88.4l-110-3.3l-4.1-88.4L441,260z" />
+                            <path id="NV" class="state state-path" d="M227,100l3.1,88l-40-0.4l-3-4.2l2.3-5.3l-10.1-0.7l-0.6-22l48.3-4.1V100z" />
+                            <path id="NY" class="state state-path" d="M860.1,100l-10,0.5l-0.3,5.1l-11.6-2l-10.8-1.3l-1.8-1.1l0.1-1.9l-11.2-1.6L810,100l20,50L860.1,100z" />
+                            <path id="OH" class="state state-path" d="M635.4,215h11l0,50l10,0l0,30l-71-3l0-77z" />
                             <path id="OK" class="state state-path" d="M485,350l4.1,45.2l-110-1.3l-4.1-43.9L485,350z" />
                             <path id="OR" class="state state-path" d="M100.1,50.7l4.1,115.4l-11,0.2l-0.1-5.1l-22,0.4l0.1-110.9L100.1,50.7z" />
                             <path id="PA" class="state state-path" d="M810,150.1l11.6,65.3l-94.4-4.2l-1.3-61.1L810,150.1z" />
-                            <path id="RI" class="state state-path" d="M895.5,138.8l-0.3,5.1l-13-1l-0.8-13.6l5.4-1.1l8.7,0.4z" />
+                            <path id="RI" class="state state-path" d="M895.5,138.8l-0.3,5.1l-13-1l-0.8-13.6l5.4-1.1L895.5,138.8z" />
                             <path id="SC" class="state state-path" d="M785.1,350l4.1,45.2l-110-1.3l-4.1-43.9L785.1,350z" />
                             <path id="SD" class="state state-path" d="M473.6,102l0.1,51.3l-94.4-11l-4.1-40.3L473.6,102z" />
                             <path id="TN" class="state state-path" d="M685.1,350l4.1,45.2l-110-1.3l-4.1-43.9L685.1,350z" />
-                            <path id="TX" class="state state-path" d="M400,450l50,100l100-30l20-80z" />
-                            <path id="UT" class="state state-path" d="M220.4,160.4l4.1,88.4l-100-2.8l-4.1-88.4L220.4,160.4z" />
+                            <path id="TX" class="state state-path" d="M510,450l50,140l160-50l20-110L510,450z" />
+                            <path id="UT" class="state state-path" d="M320.4,160.4l4.1,88.4l-100-2.8l-4.1-88.4L320.4,160.4z" />
                             <path id="VA" class="state state-path" d="M810,250l11.6,65.3l-94.4-4.2l-1.3-61.1L810,250z" />
-                            <path id="VT" class="state state-path" d="M860.1,100l-10,0.5l-0.3,5.1l-11.6-2l-10.8-1.3l-1.8-1.1l0.1-1.9l-11.2-1.6L810,100l20,50z" />
-                            <path id="WA" class="state state-path" d="M100,20l100,5l20,50l-80,20z" />
-                            <path id="WV" class="state state-path" d="M750,220l5,40l-30,10l-5,-50z" />
-                            <path id="WI" class="state state-path" d="M570,112.9l12.4,0.3l1,3.4l5,0.1l0.1,5.1l5,0.1l0.3,5.1l5,0.1l0.3,10.2l-4.1,4.4l-11-2.9l-114-11 l0.8-3l10-0.7l0.1-2.9l10.8,0.7l1-35.3L570,112.9z" />
-                            <path id="WY" class="state state-path" d="M331,100l4.1,88.4l-100-2.8l-4.1-88.4L331,100z" />
+                            <path id="VT" class="state state-path" d="M860.1,100l-10,0.5l-0.3,5.1l-11.6-2l-10.8-1.3l-1.8-1.1l0.1-1.9l-11.2-1.6L810,100l20,50L860.1,100z" />
+                            <path id="WA" class="state state-path" d="M100,20l100,5l20,50l-80,20L100,20z" />
+                            <path id="WV" class="state state-path" d="M750,220l5,40l-30,10l-5-50L750,220z" />
+                            <path id="WI" class="state state-path" d="M570,112.9l12.4,0.3l1,3.4l5,0.1l0.1,5.1l5,0.1l0.3,5.1l5,0.1l0.3,10.2l-4.1,4.4l-11-2.9l-114-11l0.8-3l10-0.7l0.1-2.9l10.8,0.7l1-35.3L570,112.9z" />
+                            <path id="WY" class="state state-path" d="M431,100l4.1,88.4l-100-2.8l-4.1-88.4L431,100z" />
                         </g>
                         <g id="state-labels" pointer-events="none">
-                            <text x="660" y="420" class="state-label">AL</text>
-                            <text x="160" y="500" class="state-label">AK</text>
-                            <text x="200" y="320" class="state-label">AZ</text>
-                            <text x="510" y="380" class="state-label">AR</text>
-                            <text x="80" y="240" class="state-label">CA</text>
-                            <text x="300" y="210" class="state-label">CO</text>
-                            <text x="880" y="145" class="state-label">CT</text>
-                            <text x="838" y="218" class="state-label">DE</text>
-                            <text x="750" y="500" class="state-label">FL</text>
-                            <text x="720" y="390" class="state-label">GA</text>
-                            <text x="430" y="560" class="state-label">HI</text>
-                            <text x="180" y="110" class="state-label">ID</text>
-                            <text x="530" y="250" class="state-label">IL</text>
-                            <text x="585" y="250" class="state-label">IN</text>
-                            <text x="460" y="195" class="state-label">IA</text>
-                            <text x="410" y="275" class="state-label">KS</text>
-                            <text x="630" y="315" class="state-label">KY</text>
-                            <text x="560" y="480" class="state-label">LA</text>
-                            <text x="910" y="65" class="state-label">ME</text>
-                            <text x="820" y="200" class="state-label">MD</text>
-                            <text x="895" y="125" class="state-label">MA</text>
-                            <text x="640" y="165" class="state-label">MI</text>
-                            <text x="470" y="115" class="state-label">MN</text>
-                            <text x="605" y="425" class="state-label">MS</text>
-                            <text x="520" y="315" class="state-label">MO</text>
-                            <text x="280" y="105" class="state-label">MT</text>
-                            <text x="395" y="215" class="state-label">NE</text>
-                            <text x="125" y="175" class="state-label">NV</text>
-                            <text x="880" y="110" class="state-label">NH</text>
+                            <text x="735" y="380" class="state-label">AL</text>
+                            <text x="90" y="525" class="state-label">AK</text>
+                            <text x="180" y="315" class="state-label">AZ</text>
+                            <text x="565" y="325" class="state-label">AR</text>
+                            <text x="100" y="240" class="state-label">CA</text>
+                            <text x="380" y="205" class="state-label">CO</text>
+                            <text x="895" y="145" class="state-label">CT</text>
+                            <text x="845" y="215" class="state-label">DE</text>
+                            <text x="780" y="510" class="state-label">FL</text>
+                            <text x="795" y="390" class="state-label">GA</text>
+                            <text x="330" y="465" class="state-label">HI</text>
+                            <text x="185" y="105" class="state-label">ID</text>
+                            <text x="595" y="240" class="state-label">IL</text>
+                            <text x="655" y="240" class="state-label">IN</text>
+                            <text x="515" y="195" class="state-label">IA</text>
+                            <text x="495" y="275" class="state-label">KS</text>
+                            <text x="715" y="285" class="state-label">KY</text>
+                            <text x="585" y="420" class="state-label">LA</text>
+                            <text x="915" y="65" class="state-label">ME</text>
+                            <text x="830" y="200" class="state-label">MD</text>
+                            <text x="900" y="125" class="state-label">MA</text>
+                            <text x="720" y="165" class="state-label">MI</text>
+                            <text x="510" y="115" class="state-label">MN</text>
+                            <text x="635" y="410" class="state-label">MS</text>
+                            <text x="590" y="315" class="state-label">MO</text>
+                            <text x="290" y="105" class="state-label">MT</text>
+                            <text x="465" y="215" class="state-label">NE</text>
+                            <text x="165" y="175" class="state-label">NV</text>
+                            <text x="885" y="110" class="state-label">NH</text>
                             <text x="845" y="190" class="state-label">NJ</text>
-                            <text x="300" y="315" class="state-label">NM</text>
-                            <text x="830" y="135" class="state-label">NY</text>
-                            <text x="795" y="315" class="state-label">NC</text>
-                            <text x="395" y="105" class="state-label">ND</text>
-                            <text x="655" y="250" class="state-label">OH</text>
-                            <text x="415" y="355" class="state-label">OK</text>
-                            <text x="85" y="105" class="state-label">OR</text>
-                            <text x="780" y="185" class="state-label">PA</text>
-                            <text x="900" y="145" class="state-label">RI</text>
-                            <text x="775" y="385" class="state-label">SC</text>
-                            <text x="395" y="155" class="state-label">SD</text>
-                            <text x="635" y="365" class="state-label">TN</text>
-                            <text x="400" y="460" class="state-label">TX</text>
-                            <text x="210" y="215" class="state-label">UT</text>
-                            <text x="860" y="105" class="state-label">VT</text>
-                            <text x="800" y="280" class="state-label">VA</text>
-                            <text x="110" y="55" class="state-label">WA</text>
-                            <text x="745" y="245" class="state-label">WV</text>
-                            <text x="575" y="160" class="state-label">WI</text>
-                            <text x="285" y="165" class="state-label">WY</text>
+                            <text x="335" y="315" class="state-label">NM</text>
+                            <text x="835" y="135" class="state-label">NY</text>
+                            <text x="825" y="315" class="state-label">NC</text>
+                            <text x="425" y="105" class="state-label">ND</text>
+                            <text x="715" y="225" class="state-label">OH</text>
+                            <text x="490" y="365" class="state-label">OK</text>
+                            <text x="125" y="105" class="state-label">OR</text>
+                            <text x="810" y="185" class="state-label">PA</text>
+                            <text x="910" y="145" class="state-label">RI</text>
+                            <text x="805" y="375" class="state-label">SC</text>
+                            <text x="425" y="155" class="state-label">SD</text>
+                            <text x="705" y="355" class="state-label">TN</text>
+                            <text x="440" y="450" class="state-label">TX</text>
+                            <text x="270" y="215" class="state-label">UT</text>
+                            <text x="865" y="105" class="state-label">VT</text>
+                            <text x="820" y="280" class="state-label">VA</text>
+                            <text x="150" y="55" class="state-label">WA</text>
+                            <text x="785" y="245" class="state-label">WV</text>
+                            <text x="645" y="160" class="state-label">WI</text>
+                            <text x="315" y="165" class="state-label">WY</text>
                         </g>
                     </svg>
                 </div>
