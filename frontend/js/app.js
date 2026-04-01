@@ -18,6 +18,8 @@ let allCases = [];
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
     initMapControls();
+    // Initialize labels after a small delay to ensure SVG is rendered and getBBox works
+    setTimeout(initLabels, 100);
 });
 
 async function initApp() {
@@ -172,7 +174,7 @@ function renderStats(total, selectedStatuses) {
     const display = document.getElementById('status-display');
     const chipsContainer = document.getElementById('active-status-chips');
     
-    document.querySelector('#status-display .total-count').textContent = `Total = ${total}`;
+    document.querySelector('#status-display .total-count').textContent = total;
     
     chipsContainer.innerHTML = "";
     selectedStatuses.forEach(s => {
@@ -180,6 +182,53 @@ function renderStats(total, selectedStatuses) {
         chip.className = 'status-chip';
         chip.textContent = s;
         chipsContainer.appendChild(chip);
+    });
+}
+function initLabels() {
+    const labelGroup = document.getElementById('state-labels');
+    if (!labelGroup) return;
+    labelGroup.innerHTML = '';
+    
+    // Position adjustments for specific states where center of bbox isn't ideal
+    const adjustments = {
+        'FL': { dx: 2, dy: 1 },
+        'MI': { dx: 1, dy: 2 },
+        'LA': { dx: -1, dy: 0 },
+        'CA': { dx: -1, dy: 0 },
+        'AK': { dx: 0, dy: -2 },
+        'HI': { dx: 0, dy: -2 },
+        'NJ': { dx: 8, dy: 0 }, // Position for label boxes
+        'RI': { dx: 8, dy: 0 },
+        'DE': { dx: 8, dy: 0 },
+        'MD': { dx: 8, dy: 0 },
+        'NH': { dx: 8, dy: 0 },
+        'CT': { dx: 8, dy: 0 },
+        'VT': { dx: 8, dy: 0 },
+        'MA': { dx: 8, dy: 0 },
+        'DC': { dx: 8, dy: 0 }
+    };
+
+    document.querySelectorAll('.state-path').forEach(path => {
+        const stateAbbr = path.id;
+        if (!stateAbbr || stateAbbr === 'labels' || stateAbbr.length !== 2) return;
+        
+        const bbox = path.getBBox();
+        let x = bbox.x + bbox.width / 2;
+        let y = bbox.y + bbox.height / 2;
+        
+        // Apply adjustments
+        if (adjustments[stateAbbr]) {
+            x += adjustments[stateAbbr].dx;
+            y += adjustments[stateAbbr].dy;
+        }
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', x);
+        text.setAttribute('y', y);
+        text.setAttribute('class', 'state-label');
+        text.setAttribute('data-state', stateAbbr);
+        text.textContent = stateAbbr;
+        labelGroup.appendChild(text);
     });
 }
 
@@ -198,17 +247,8 @@ function renderMap(stateStats) {
         path.classList.remove('has-cases');
         path.style.removeProperty('--intensity');
 
-        // Find the corresponding label element
-        // We'll look for text content matching the state code
-        let labelElem = null;
-        for (const l of labels) {
-            // Get the base code (strip count if already present)
-            const text = l.textContent.split('(')[0].trim();
-            if (text === stateAbbr) {
-                labelElem = l;
-                break;
-            }
-        }
+        // Find the corresponding label element using data-state attribute
+        const labelElem = document.querySelector(`.state-label[data-state="${stateAbbr}"]`);
 
         if (cases.length > 0) {
             path.classList.add('has-cases');

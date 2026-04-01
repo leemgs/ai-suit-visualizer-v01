@@ -245,7 +245,7 @@ main {
 .state {
     fill: #1e40af; /* Primary Professional Blue */
     stroke: rgba(255, 255, 255, 0.4);
-    stroke-width: 0.6px;
+    stroke-width: 0.1px;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
 }
@@ -253,33 +253,34 @@ main {
 .state:hover {
     fill: #3b82f6;
     stroke: #ffffff;
-    stroke-width: 1.5px;
-    filter: brightness(1.15) drop-shadow(0 0 10px rgba(59, 130, 246, 0.4));
+    stroke-width: 0.2px;
+    filter: brightness(1.15) drop-shadow(0 0 2px rgba(59, 130, 246, 0.4));
 }
 
 .state.has-cases {
     fill: #f97316; /* Base heatmap orange */
     stroke: rgba(255, 255, 255, 0.6);
-    stroke-width: 0.8px;
+    stroke-width: 0.15px;
     opacity: var(--intensity, 0.6);
-    filter: drop-shadow(0 0 5px rgba(249, 115, 22, 0.3));
+    filter: drop-shadow(0 0 1px rgba(249, 115, 22, 0.3));
 }
 
 .state.has-cases:hover {
     fill: #fb923c;
     opacity: 1;
-    stroke-width: 2px;
+    stroke-width: 0.3px;
 }
 
 .state-label {
     fill: white;
-    font-size: 11px;
+    font-size: 2px;
     font-weight: 800;
     text-anchor: middle;
     pointer-events: none;
     user-select: none;
     opacity: 0.85;
     transition: opacity 0.2s, font-size 0.2s;
+    dominant-baseline: middle; /* Better centering */
 }
 
 #map-svg-wrapper:hover .state-label {
@@ -288,10 +289,10 @@ main {
 
 .state-label.active-label {
     fill: #22d3ee;
-    font-size: 13px;
+    font-size: 2.2px;
     font-weight: 900;
     opacity: 1;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+    filter: drop-shadow(0 0.5px 1px rgba(0,0,0,0.8));
 }
 
 /* Zoom Controls */
