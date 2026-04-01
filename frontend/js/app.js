@@ -8,8 +8,13 @@ const STATE_ABBR = {
     'NEW MEXICO': 'NM', 'NEW YORK': 'NY', 'NORTH CAROLINA': 'NC', 'NORTH DAKOTA': 'ND', 'OHIO': 'OH',
     'OKLAHOMA': 'OK', 'OREGON': 'OR', 'PENNSYLVANIA': 'PA', 'RHODE ISLAND': 'RI', 'SOUTH CAROLINA': 'SC',
     'SOUTH DAKOTA': 'SD', 'TENNESSEE': 'TN', 'TEXAS': 'TX', 'UTAH': 'UT', 'VERMONT': 'VT',
-    'VIRGINIA': 'VA', 'WASHINGTON': 'WA', 'WEST VIRGINIA': 'WV', 'WISCONSIN': 'WI', 'WYOMING': 'WY',
-    'DISTRICT OF COLUMBIA': 'DC'
+    'VIRGINIA': 'VA', 'WASHINGTON': 'WA', 'WEST VIRGINIA': 'WV', 'WI': 'WI', 'WY': 'WY',
+    'DISTRICT OF COLUMBIA': 'DC', 'WASHINGTON D.C.': 'DC',
+    // Korean names
+    '캘리포니아': 'CA', '뉴욕': 'NY', '버지니아': 'VA', '메사추세츠': 'MA', '일리노이': 'IL',
+    '조지아': 'GA', '네바다': 'NV', '플로리다': 'FL', '델라웨어': 'DE', '펜실베이니아': 'PA',
+    '메릴랜드': 'MD', '애리조나': 'AZ', '몬태나': 'MT', '텍사스': 'TX', '워싱턴': 'WA',
+    '콜로라도': 'CO', '뉴저지': 'NJ', '미시간': 'MI', '오하이오': 'OH', '코네티컷': 'CT'
 };
 
 const COUNTRY_MAP = {
@@ -25,26 +30,44 @@ const COUNTRY_MAP = {
 };
 
 const COUNTRY_LABEL_OVERRIDE = {
-    'kr': 'KO' // User requested KO for South Korea
+    'kr': 'KO',
+    'us': 'USA',
+    'gb': 'UK'
 };
 
 
 let allCases = [];
 
-document.addEventListener('DOMContentLoaded', () => {
-    initApp();
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Core App Setup
+    await initApp();
     initMapControls();
     
-    // Initialize US labels immediately (or close to it)
-    setTimeout(initUSLabels, 150);
+    // 2. Load Maps and Labels
+    // US labels (Static SVG in HTML)
+    setTimeout(() => {
+        initUSLabels();
+        refreshVisualization();
+    }, 200);
 
-    // Load world map in background and initialize its labels after
-    loadWorldMap().then(() => {
-        setTimeout(initWorldLabels, 100);
-    }).catch(err => {
-        console.error("Delayed world map load:", err);
-    });
+    // World Map (External SVG)
+    try {
+        await loadWorldMap();
+        initWorldLabels();
+        refreshVisualization();
+    } catch (err) {
+        console.error("World map initialization failed:", err);
+    }
 });
+
+// Helper to trigger visualization refresh without re-fetching data
+function refreshVisualization() {
+    if (allCases.length > 0) {
+        const checkboxes = document.querySelectorAll('#status-dropdown input[type="checkbox"]');
+        const selectedStatuses = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+        updateVisualization(allCases, selectedStatuses);
+    }
+}
 
 
 async function loadWorldMap() {
@@ -103,9 +126,22 @@ async function initApp() {
     // Initial UI state
     updateToggleBtnText();
 
+    // Help Modal
+    const helpBtn = document.getElementById('help-btn');
+    const helpModal = document.getElementById('help-modal');
+    const closeHelpBtn = document.getElementById('close-help-btn');
+    
+    if (helpBtn && helpModal && closeHelpBtn) {
+        helpBtn.onclick = () => helpModal.style.display = 'flex';
+        closeHelpBtn.onclick = () => helpModal.style.display = 'none';
+        window.addEventListener('click', (e) => {
+            if (e.target === helpModal) helpModal.style.display = 'none';
+        });
+    }
+
     // Attempt an initial visualize if values are set
     if (document.getElementById('csv-select').value) {
-        handleVisualize();
+        await handleVisualize();
     }
 }
 
@@ -190,7 +226,15 @@ function updateVisualization(cases, selectedStatuses) {
     // Filter cases by selected statuses
     const activeCases = cases.filter(c => {
         if (!c.status) return false;
-        return selectedStatuses.some(s => c.status.includes(s));
+        const caseStatus = c.status.trim();
+        return selectedStatuses.some(s => {
+            const filterValue = s.trim();
+            // Broader match for termination
+            if (filterValue === '종' || filterValue === '종결' || filterValue === '종료') {
+                return caseStatus.includes('종결') || caseStatus.includes('종료') || caseStatus.includes('종');
+            }
+            return caseStatus.includes(filterValue);
+        });
     });
 
     const selectedCountry = document.getElementById('country-select').value;
@@ -198,7 +242,11 @@ function updateVisualization(cases, selectedStatuses) {
     
     // Calculate global metrics for the share info
     const worldTotal = activeCases.length;
-    const usaCases = activeCases.filter(c => extractState(c.court) !== null);
+    const usaCases = activeCases.filter(c => {
+        const country = (c.country || "").trim().toLowerCase();
+        // TRUST COUNTRY FIELD: Only count as US if explicitly labeled as such
+        return country === 'us' || country === '미국' || country === 'usa';
+    });
     const usaCount = usaCases.length;
 
     let displayCases = [];
@@ -226,22 +274,27 @@ function updateVisualization(cases, selectedStatuses) {
         });
     }
 
-    renderStats(displayCases.length, selectedStatuses, selectedCountry, worldTotal, usaCount);
+    renderStats(displayCases.length, selectedStatuses, selectedCountry, worldTotal, usaCount, displayCases);
     toggleMapDisplay(selectedCountry);
     renderMap(stats, selectedCountry);
     renderSidebar(displayCases);
+
+    // Render the summary table/report
+    renderSummaryTable(stats, displayCases.length, selectedCountry);
 }
 
 function toggleMapDisplay(country) {
     const usMap = document.getElementById('us-map');
     const worldMap = document.getElementById('world-map');
     if (country === 'USA') {
-        usMap.style.display = 'block';
-        worldMap.style.display = 'none';
+        if (usMap) usMap.style.display = 'block';
+        if (worldMap) worldMap.style.display = 'none';
+        initUSLabels(); // Re-init to ensure BBox is correct
         resetTransform(); // Reset zoom when switching
     } else {
-        usMap.style.display = 'none';
-        worldMap.style.display = 'block';
+        if (usMap) usMap.style.display = 'none';
+        if (worldMap) worldMap.style.display = 'block';
+        initWorldLabels(); // Re-init to ensure BBox is correct
         resetTransform();
     }
 }
@@ -266,28 +319,67 @@ function extractState(courtText) {
     return null;
 }
 
-function renderStats(total, selectedStatuses, selectedCountry, worldTotal, usaCount) {
-    const display = document.getElementById('status-display');
-    const chipsContainer = document.getElementById('active-status-chips');
+function renderStats(total, selectedStatuses, selectedCountry, worldTotal, usaCount, currentCases) {
+    const badgeContainer = document.getElementById('status-count-badges');
     const shareContainer = document.getElementById('share-info');
+    const totalEl = document.querySelector('#status-display .total-count');
     
-    document.querySelector('#status-display .total-count').textContent = total;
+    if (totalEl) totalEl.textContent = total;
     
-    if (selectedCountry === 'USA' && worldTotal > 0) {
-        const share = Math.round((usaCount / worldTotal) * 100);
-        shareContainer.textContent = `미국건수/전세계건수 (점유율) = ${usaCount}/${worldTotal} (${share}%)`;
-        shareContainer.style.display = 'block';
-    } else {
-        shareContainer.style.display = 'none';
+    if (shareContainer) {
+        if (selectedCountry === 'USA' && worldTotal > 0) {
+            const share = Math.round((usaCount / worldTotal) * 100);
+            shareContainer.textContent = `미국건수/전세계건수 (점유율) = ${usaCount}/${worldTotal} (${share}%)`;
+            shareContainer.style.display = 'block';
+        } else {
+            shareContainer.style.display = 'none';
+        }
     }
     
-    chipsContainer.innerHTML = "";
-    selectedStatuses.forEach(s => {
-        const chip = document.createElement('span');
-        chip.className = 'status-chip';
-        chip.textContent = s;
-        chipsContainer.appendChild(chip);
-    });
+    // Render Status-wise Badges in Sidebar
+    if (badgeContainer && currentCases) {
+        badgeContainer.innerHTML = '';
+        
+        // Count specific statuses found in the data
+        const counts = {};
+        currentCases.forEach(c => {
+            const s = c.status || 'Unknown';
+            let group = '기타';
+            if (s.includes('준비')) group = '준비';
+            else if (s.includes('시작')) group = '시작';
+            else if (s.includes('1심')) group = '1심';
+            else if (s.includes('2심')) group = '2심';
+            else if (s.includes('항소')) group = '항소';
+            else if (s.includes('판결')) group = '판결';
+            else if (s.includes('종')) group = '종료/종결';
+            
+            counts[group] = (counts[group] || 0) + 1;
+        });
+
+        // Use standard display order
+        const displayOrder = ['준비', '시작', '1심', '2심', '판결', '항소', '종료/종결'];
+        displayOrder.forEach(label => {
+            const count = counts[label] || 0;
+            const badge = document.createElement('div');
+            badge.className = `status-badge-item ${count > 0 ? 'active' : ''}`;
+            badge.innerHTML = `
+                <span class="label">${label}</span>
+                <span class="count">${count}</span>
+            `;
+            badgeContainer.appendChild(badge);
+        });
+    }
+
+    const chipsContainer = document.getElementById('active-status-chips');
+    if (chipsContainer) {
+        chipsContainer.innerHTML = "";
+        selectedStatuses.forEach(s => {
+            const chip = document.createElement('span');
+            chip.className = 'status-chip';
+            chip.textContent = (s === '종' || s === '종료' || s === '종결') ? '종료/종결' : s;
+            chipsContainer.appendChild(chip);
+        });
+    }
 }
 function initLabels() {
     // This function is now just a fallback or convenience
@@ -309,11 +401,21 @@ function initUSLabels() {
         'VT': { dx: 8, dy: 0 }, 'MA': { dx: 8, dy: 0 }, 'DC': { dx: 8, dy: 0 }
     };
 
+    const statePaths = new Map();
+
     document.querySelectorAll('#us-map .state-path').forEach(path => {
         const id = path.id;
         if (!id || id.length !== 2) return;
         
         const bbox = path.getBBox();
+        const area = bbox.width * bbox.height;
+        if (!statePaths.has(id) || area > statePaths.get(id).area) {
+            statePaths.set(id, { bbox, area });
+        }
+    });
+
+    statePaths.forEach((data, id) => {
+        const { bbox } = data;
         let x = bbox.x + bbox.width / 2;
         let y = bbox.y + bbox.height / 2;
         
@@ -331,15 +433,29 @@ function initWorldLabels() {
     if (!labelGroup) return;
     labelGroup.innerHTML = '';
 
+    const countryPaths = new Map();
+
     document.querySelectorAll('#world-paths .state-path').forEach(el => {
-        // Handle both <path id=".."> and <g id=".."><path>
         const id = el.id || el.parentElement.id;
-        if (!id || id.length > 3) return; // Skip if no code or too long
+        if (!id || id.length > 3) return;
 
-        const bbox = el.getBBox();
-        // Skip very tiny elements or hidden ones
-        if (bbox.width < 1 || bbox.height < 1) return;
+        let bbox;
+        try {
+            bbox = el.getBBox();
+        } catch(e) {
+            bbox = { x: 0, y: 0, width: 0, height: 0 };
+        }
+        
+        if (bbox.width === 0 && bbox.height === 0) return;
 
+        const area = bbox.width * bbox.height;
+        if (!countryPaths.has(id) || area > countryPaths.get(id).area) {
+            countryPaths.set(id, { el, bbox, area });
+        }
+    });
+
+    countryPaths.forEach((data, id) => {
+        const { bbox } = data;
         const x = bbox.x + bbox.width / 2;
         const y = bbox.y + bbox.height / 2;
         const displayCode = (COUNTRY_LABEL_OVERRIDE[id] || id).toUpperCase();
@@ -391,7 +507,7 @@ function renderMap(stats, countryType) {
             pathEl.onmouseout = hideTooltip;
 
             if (labelElem) {
-                labelElem.textContent = `${baseDisplayCode}(${cases.length})`;
+                labelElem.textContent = `${baseDisplayCode} (${cases.length})`;
                 labelElem.classList.add('active-label');
             }
         } else {
@@ -407,23 +523,29 @@ function renderMap(stats, countryType) {
 }
 
 function renderSidebar(cases) {
-    const container = document.getElementById('case-list-sidebar');
-    container.innerHTML = '<h3>Recent Cases</h3>';
+    const list = document.getElementById('litigation-list');
+    const title = document.getElementById('list-title');
     
+    if (!list) return;
+    
+    list.innerHTML = "";
+    if (title) title.textContent = `소송 목록 상세 (Total: ${cases.length})`;
+
     if (cases.length === 0) {
-        container.innerHTML += '<p style="color: grey">No cases found for this period.</p>';
+        list.innerHTML = '<p class="empty-msg">조건에 맞는 소송이 없습니다.</p>';
         return;
     }
 
-    cases.slice(0, 50).forEach(c => {
-        const div = document.createElement('div');
-        div.className = 'case-item animate-in';
-        div.innerHTML = `
-            <div class="case-title">${c.case_name}</div>
-            <div class="case-meta">${c.court} | ${c.file_date}</div>
+    // Show first 100 for performance
+    cases.slice(0, 100).forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'case-item animate-in';
+        item.innerHTML = `
+            <div class="case-title">${c.case_name || 'No Title'}</div>
+            <div class="case-meta">${c.court} | ${c.status}</div>
         `;
-        div.onclick = () => showCaseDetail(c);
-        container.appendChild(div);
+        item.onclick = () => showCaseDetail(c);
+        list.appendChild(item);
     });
 }
 
@@ -577,4 +699,109 @@ function applyTransform() {
     if (wrapper) {
         wrapper.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
     }
+}
+
+// RESTORED SUMMARY TABLE AND CSV EXPORT Logic
+function renderSummaryTable(stats, total, type) {
+    const container = document.getElementById('map-summary-container');
+    const wrapper = document.getElementById('stats-table-wrapper');
+    const textSummary = document.getElementById('text-summary');
+    const titleEl = document.getElementById('summary-title');
+    const exportBtn = document.getElementById('export-csv-btn');
+
+    if (!container || total === 0) {
+        if (container) container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'block';
+    if (titleEl) {
+        titleEl.textContent = type === 'WORLD' ? '전세계 국가별 소송 현황' : '미국 주별 소송 현황';
+    }
+
+    // Sort stats
+    const sorted = Object.entries(stats)
+        .map(([loc, cases]) => ({
+            loc,
+            count: cases.length,
+            share: ((cases.length / total) * 100).toFixed(1)
+        }))
+        .sort((a, b) => b.count - a.count);
+
+    let html = `
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>${type === 'WORLD' ? '국가' : '주 (State)'}</th>
+                    <th>소송 건수</th>
+                    <th>비중 (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    sorted.forEach(item => {
+        const locName = type === 'WORLD' ? (item.loc).toUpperCase() : item.loc;
+        html += `
+            <tr>
+                <td>${locName}</td>
+                <td><b>${item.count}</b></td>
+                <td>${item.share}%</td>
+            </tr>
+        `;
+    });
+
+    html += `
+            <tr class="total-row">
+                <td>TOTAL</td>
+                <td>${total}</td>
+                <td>100%</td>
+            </tr>
+        </tbody>
+    </table>`;
+
+    if (wrapper) wrapper.innerHTML = html;
+
+    // Generate textual summary
+    let summaryText = "";
+    if (type === 'WORLD') {
+        const top3 = sorted.slice(0, 3).map(x => `${x.loc.toUpperCase()}(${x.count}건)`).join(", ");
+        summaryText = `현재 전세계 총 <b>${total}건</b>의 소송이 집계되었습니다. `;
+        if (top3) summaryText += `주요 소송 발생 국가는 <b>${top3}</b> 순입니다.`;
+    } else {
+        const top3 = sorted.slice(0, 3).map(x => `${x.loc}(${x.count}건)`).join(", ");
+        summaryText = `현재 미국 내 총 <b>${total}건</b>의 소송이 집계되었습니다. `;
+        if (top3) summaryText += `가장 많은 소송이 진행 중인 지역은 <b>${top3}</b> 등입니다.`;
+    }
+    
+    if (textSummary) textSummary.innerHTML = summaryText;
+
+    // Hook up export button
+    if (exportBtn) {
+        exportBtn.onclick = () => exportToCSV(sorted, total, type);
+    }
+}
+
+function exportToCSV(data, total, type) {
+    let csv = "\uFEFF"; // UTF-8 BOM for Excel
+    csv += (type === 'WORLD' ? "Country" : "State") + ",Count,Share (%)\n";
+    
+    data.forEach(item => {
+        const locName = type === 'WORLD' ? item.loc.toUpperCase() : item.loc;
+        csv += `${locName},${item.count},${item.share}\n`;
+    });
+    
+    csv += `TOTAL,${total},100\n`;
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    const dateStr = new Date().toISOString().slice(0, 10);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `litigation_report_${type.toLowerCase()}_${dateStr}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }

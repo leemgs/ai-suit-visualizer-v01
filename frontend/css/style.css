@@ -172,15 +172,14 @@ main {
     display: flex;
     flex-direction: column;
     padding: 0;
-    overflow: hidden;
+    overflow-y: auto; /* Changed from hidden to allow scrolling */
     position: relative;
     box-shadow: inset 0 0 20px rgba(0,0,0,0.4);
 }
 
 .map-viewport {
-    flex: 1;
     width: 100%;
-    height: 100%;
+    min-height: 80vh; /* Increased height to make map larger */
     cursor: grab;
     overflow: hidden;
     position: relative;
@@ -316,11 +315,15 @@ main {
 }
 
 .world-label {
-    font-size: 8px;
+    font-size: 11px; /* Increased base size */
+    font-weight: 700;
 }
 
 .world-label.active-label {
-    font-size: 10px;
+    fill: #fcd34d; /* Bright gold/yellow for world counts */
+    font-size: 14px; /* Larger for visibility */
+    font-weight: 900;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,1));
 }
 
 /* Zoom Controls */
@@ -443,5 +446,169 @@ main {
     font-size: 1.5rem;
 }
 
-@keyframes animateIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.animate-in { animation: animateIn 0.4s forwards; }
+.world-summary-container {
+    margin: 40px;
+    padding: 30px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+}
+
+.summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.summary-header h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.btn-export {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-export:hover {
+    background: #4338ca;
+    transform: translateY(-2px);
+}
+
+.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+}
+
+.stats-table th, .stats-table td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.stats-table th {
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+}
+
+.stats-table tbody tr:hover {
+    background: rgba(255,255,255,0.02);
+}
+
+.stats-table tr.total-row {
+    background: rgba(99, 102, 241, 0.1);
+    font-weight: 700;
+}
+
+.text-summary {
+    line-height: 1.8;
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.text-summary b {
+    color: #fff;
+    font-weight: 700;
+}
+
+.help-btn {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.help-btn:hover {
+    background: rgba(34, 211, 238, 0.1);
+    transform: translateY(-1px);
+}
+
+.help-content h4 {
+    margin: 20px 0 10px;
+    color: var(--accent);
+}
+
+.help-content ul {
+    margin-left: 20px;
+}
+
+.help-content li {
+    margin-bottom: 8px;
+    color: var(--text-dim);
+}
+
+.help-content strong {
+    color: #fff;
+}
+.status-summary {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.status-summary h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: var(--accent);
+}
+
+.status-count-badges {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.status-badge-item {
+    background: rgba(255,255,255,0.05);
+    padding: 10px 12px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: all 0.2s;
+}
+
+.status-badge-item .label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+}
+
+.status-badge-item .count {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.status-badge-item.active {
+    border-color: var(--primary);
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.status-badge-item.active .count {
+    color: var(--primary);
+}
+
+.status-badge-item:hover {
+    background: rgba(255,255,255,0.08);
+}
