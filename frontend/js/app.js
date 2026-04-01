@@ -1,4 +1,3 @@
-
 const STATE_ABBR = {
     'ALABAMA': 'AL', 'ALASKA': 'AK', 'ARIZONA': 'AZ', 'ARKANSAS': 'AR', 'CALIFORNIA': 'CA',
     'COLORADO': 'CO', 'CONNECTICUT': 'CT', 'DELAWARE': 'DE', 'FLORIDA': 'FL', 'GEORGIA': 'GA',
@@ -13,14 +12,61 @@ const STATE_ABBR = {
     'DISTRICT OF COLUMBIA': 'DC'
 };
 
+const COUNTRY_MAP = {
+    '미국': 'us',
+    '한국': 'kr',
+    '독일': 'de',
+    '영국': 'gb',
+    '프랑스': 'fr',
+    '캐나다': 'ca',
+    '일본': 'jp',
+    '중국': 'cn',
+    '대한민국': 'kr'
+};
+
+const COUNTRY_LABEL_OVERRIDE = {
+    'kr': 'KO' // User requested KO for South Korea
+};
+
+
 let allCases = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
     initMapControls();
-    // Initialize labels after a small delay to ensure SVG is rendered and getBBox works
-    setTimeout(initLabels, 100);
+    // Initialize labels after world map is loaded
+    loadWorldMap().then(() => {
+        setTimeout(initLabels, 100);
+    });
 });
+
+async function loadWorldMap() {
+    try {
+        const response = await fetch('/image/world_map.svg');
+        const text = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(text, "image/svg+xml");
+        const pathsGroup = xmlDoc.querySelector('g');
+        const container = document.getElementById('world-paths');
+        
+        if (container && pathsGroup) {
+            // Transfer paths and preserve IDs
+            Array.from(pathsGroup.children).forEach(child => {
+                const clone = child.cloneNode(true);
+                // Standardize class for styling
+                if (clone.tagName === 'path') {
+                    clone.classList.add('state-path', 'country');
+                } else if (clone.tagName === 'g') {
+                    clone.querySelectorAll('path').forEach(p => p.classList.add('state-path', 'country'));
+                }
+                container.appendChild(clone);
+            });
+        }
+    } catch (err) {
+        console.error("Failed to load world map:", err);
+    }
+}
+
 
 async function initApp() {
     await populateFileList();
@@ -45,6 +91,7 @@ async function initApp() {
     });
 
     document.getElementById('visualize-btn').addEventListener('click', handleVisualize);
+    document.getElementById('country-select').addEventListener('change', handleVisualize);
     
     // Initial UI state
     updateToggleBtnText();
@@ -141,18 +188,45 @@ function updateVisualization(cases, selectedStatuses) {
         return selectedStatuses.some(s => c.status.includes(s));
     });
 
-    const stateStats = {};
+    const selectedCountry = document.getElementById('country-select').value;
+    const stats = {};
     activeCases.forEach(c => {
-        const state = extractState(c.court);
-        if (state) {
-            stateStats[state] = (stateStats[state] || []);
-            stateStats[state].push(c);
+        let loc = null;
+        if (selectedCountry === 'USA') {
+            loc = extractState(c.court);
+        } else {
+            loc = extractCountry(c.country);
+        }
+
+        if (loc) {
+            stats[loc] = (stats[loc] || []);
+            stats[loc].push(c);
         }
     });
 
     renderStats(activeCases.length, selectedStatuses);
-    renderMap(stateStats);
+    toggleMapDisplay(selectedCountry);
+    renderMap(stats, selectedCountry);
     renderSidebar(activeCases);
+}
+
+function toggleMapDisplay(country) {
+    const usMap = document.getElementById('us-map');
+    const worldMap = document.getElementById('world-map');
+    if (country === 'USA') {
+        usMap.style.display = 'block';
+        worldMap.style.display = 'none';
+        resetTransform(); // Reset zoom when switching
+    } else {
+        usMap.style.display = 'none';
+        worldMap.style.display = 'block';
+        resetTransform();
+    }
+}
+
+function extractCountry(countryText) {
+    if (!countryText) return null;
+    return COUNTRY_MAP[countryText] || null;
 }
 
 function extractState(courtText) {
@@ -185,100 +259,114 @@ function renderStats(total, selectedStatuses) {
     });
 }
 function initLabels() {
+    initUSLabels();
+    initWorldLabels();
+}
+
+function initUSLabels() {
     const labelGroup = document.getElementById('state-labels');
     if (!labelGroup) return;
     labelGroup.innerHTML = '';
     
-    // Position adjustments for specific states where center of bbox isn't ideal
     const adjustments = {
-        'FL': { dx: 2, dy: 1 },
-        'MI': { dx: 1, dy: 2 },
-        'LA': { dx: -1, dy: 0 },
-        'CA': { dx: -1, dy: 0 },
-        'AK': { dx: 0, dy: -2 },
-        'HI': { dx: 0, dy: -2 },
-        'NJ': { dx: 8, dy: 0 }, // Position for label boxes
-        'RI': { dx: 8, dy: 0 },
-        'DE': { dx: 8, dy: 0 },
-        'MD': { dx: 8, dy: 0 },
-        'NH': { dx: 8, dy: 0 },
-        'CT': { dx: 8, dy: 0 },
-        'VT': { dx: 8, dy: 0 },
-        'MA': { dx: 8, dy: 0 },
-        'DC': { dx: 8, dy: 0 }
+        'FL': { dx: 2, dy: 1 }, 'MI': { dx: 1, dy: 2 }, 'LA': { dx: -1, dy: 0 },
+        'CA': { dx: -1, dy: 0 }, 'AK': { dx: 0, dy: -2 }, 'HI': { dx: 0, dy: -2 },
+        'NJ': { dx: 8, dy: 0 }, 'RI': { dx: 8, dy: 0 }, 'DE': { dx: 8, dy: 0 },
+        'MD': { dx: 8, dy: 0 }, 'NH': { dx: 8, dy: 0 }, 'CT': { dx: 8, dy: 0 },
+        'VT': { dx: 8, dy: 0 }, 'MA': { dx: 8, dy: 0 }, 'DC': { dx: 8, dy: 0 }
     };
 
-    document.querySelectorAll('.state-path').forEach(path => {
-        const stateAbbr = path.id;
-        if (!stateAbbr || stateAbbr === 'labels' || stateAbbr.length !== 2) return;
+    document.querySelectorAll('#us-map .state-path').forEach(path => {
+        const id = path.id;
+        if (!id || id.length !== 2) return;
         
         const bbox = path.getBBox();
         let x = bbox.x + bbox.width / 2;
         let y = bbox.y + bbox.height / 2;
         
-        // Apply adjustments
-        if (adjustments[stateAbbr]) {
-            x += adjustments[stateAbbr].dx;
-            y += adjustments[stateAbbr].dy;
+        if (adjustments[id]) {
+            x += adjustments[id].dx;
+            y += adjustments[id].dy;
         }
 
-        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', x);
-        text.setAttribute('y', y);
-        text.setAttribute('class', 'state-label');
-        text.setAttribute('data-state', stateAbbr);
-        text.textContent = stateAbbr;
-        labelGroup.appendChild(text);
+        createLabel(labelGroup, x, y, id, 'state-label', id);
     });
 }
 
-function renderMap(stateStats) {
-    const paths = document.querySelectorAll('.state-path');
-    const labels = document.querySelectorAll('.state-label');
+function initWorldLabels() {
+    const labelGroup = document.getElementById('world-labels');
+    if (!labelGroup) return;
+    labelGroup.innerHTML = '';
+
+    document.querySelectorAll('#world-paths .state-path').forEach(el => {
+        // Handle both <path id=".."> and <g id=".."><path>
+        const id = el.id || el.parentElement.id;
+        if (!id || id.length > 3) return; // Skip if no code or too long
+
+        const bbox = el.getBBox();
+        // Skip very tiny elements or hidden ones
+        if (bbox.width < 1 || bbox.height < 1) return;
+
+        const x = bbox.x + bbox.width / 2;
+        const y = bbox.y + bbox.height / 2;
+        const displayCode = (COUNTRY_LABEL_OVERRIDE[id] || id).toUpperCase();
+
+        createLabel(labelGroup, x, y, id, 'state-label world-label', displayCode);
+    });
+}
+
+function createLabel(group, x, y, id, className, textContent) {
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', x);
+    text.setAttribute('y', y);
+    text.setAttribute('class', className);
+    text.setAttribute('data-loc', id);
+    text.textContent = textContent;
+    group.appendChild(text);
+}
+
+
+function renderMap(stats, countryType) {
+    const selector = countryType === 'USA' ? '#us-map .state-path' : '#world-map .state-path';
+    const paths = document.querySelectorAll(selector);
     
-    // Find max case count for intensity scale
-    const counts = Object.values(stateStats).map(c => c.length);
+    const counts = Object.values(stats).map(c => c.length);
     const maxCount = counts.length > 0 ? Math.max(...counts) : 1;
 
-    paths.forEach(path => {
-        const stateAbbr = path.id; 
-        const cases = stateStats[stateAbbr] || [];
+    paths.forEach(el => {
+        const id = el.id || el.parentElement.id;
+        const cases = stats[id] || [];
         
-        path.classList.remove('has-cases');
-        path.style.removeProperty('--intensity');
+        // Use el for the path styling, but handle g groups if necessary
+        const pathEl = el.tagName === 'path' ? el : el.querySelector('path');
+        if (!pathEl) return;
 
-        // Find the corresponding label element using data-state attribute
-        const labelElem = document.querySelector(`.state-label[data-state="${stateAbbr}"]`);
+        pathEl.classList.remove('has-cases');
+        pathEl.style.removeProperty('--intensity');
+
+        const labelElem = document.querySelector(`.state-label[data-loc="${id}"]`);
+        const baseDisplayCode = (COUNTRY_LABEL_OVERRIDE[id] || id).toUpperCase();
 
         if (cases.length > 0) {
-            path.classList.add('has-cases');
-            path.setAttribute('data-count', cases.length);
-            
-            // Set heatmap intensity (0.4 to 1.0)
+            pathEl.classList.add('has-cases');
+            pathEl.setAttribute('data-count', cases.length);
             const intensity = 0.4 + (0.6 * (cases.length / maxCount));
-            path.style.setProperty('--intensity', intensity);
+            pathEl.style.setProperty('--intensity', intensity);
             
-            path.onclick = () => {
-                showStateCasesModal(stateAbbr, cases);
-            };
+            pathEl.onclick = () => showStateCasesModal(id, cases);
+            pathEl.onmouseover = (e) => showTooltip(e, `${baseDisplayCode}: ${cases.length} litigation(s)`);
+            pathEl.onmouseout = hideTooltip;
 
-            // Simple tooltip simulation
-            path.onmouseover = (e) => showTooltip(e, `${stateAbbr}: ${cases.length} litigation(s)`);
-            path.onmouseout = hideTooltip;
-
-            // Updated label with count (Requirement #3)
             if (labelElem) {
-                labelElem.textContent = `${stateAbbr}(${cases.length})`;
+                labelElem.textContent = `${baseDisplayCode}(${cases.length})`;
                 labelElem.classList.add('active-label');
             }
         } else {
-            path.onclick = null;
-            path.onmouseover = null;
-            path.onmouseout = null;
-            
-            // Reset label
+            pathEl.onclick = null;
+            pathEl.onmouseover = null;
+            pathEl.onmouseout = null;
             if (labelElem) {
-                labelElem.textContent = stateAbbr;
+                labelElem.textContent = baseDisplayCode;
                 labelElem.classList.remove('active-label');
             }
         }

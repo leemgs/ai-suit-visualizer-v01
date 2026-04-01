@@ -242,7 +242,7 @@ main {
 }
 
 /* Map Styling */
-.state {
+.state, .country {
     fill: #1e40af; /* Primary Professional Blue */
     stroke: rgba(255, 255, 255, 0.4);
     stroke-width: 0.1px;
@@ -250,14 +250,22 @@ main {
     cursor: pointer;
 }
 
-.state:hover {
+.country {
+    stroke-width: 0.5px; /* Thicker for world map */
+}
+
+.state:hover, .country:hover {
     fill: #3b82f6;
     stroke: #ffffff;
     stroke-width: 0.2px;
     filter: brightness(1.15) drop-shadow(0 0 2px rgba(59, 130, 246, 0.4));
 }
 
-.state.has-cases {
+.country:hover {
+    stroke-width: 1px;
+}
+
+.state.has-cases, .country.has-cases {
     fill: #f97316; /* Base heatmap orange */
     stroke: rgba(255, 255, 255, 0.6);
     stroke-width: 0.15px;
@@ -265,7 +273,11 @@ main {
     filter: drop-shadow(0 0 1px rgba(249, 115, 22, 0.3));
 }
 
-.state.has-cases:hover {
+.country.has-cases {
+    stroke-width: 0.8px;
+}
+
+.state.has-cases:hover, .country.has-cases:hover {
     fill: #fb923c;
     opacity: 1;
     stroke-width: 0.3px;
@@ -293,6 +305,14 @@ main {
     font-weight: 900;
     opacity: 1;
     filter: drop-shadow(0 0.5px 1px rgba(0,0,0,0.8));
+}
+
+.world-label {
+    font-size: 8px;
+}
+
+.world-label.active-label {
+    font-size: 10px;
 }
 
 /* Zoom Controls */

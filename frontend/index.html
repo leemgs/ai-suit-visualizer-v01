@@ -19,6 +19,7 @@
             </select>
             <select id="country-select">
                 <option value="USA" selected>국가: 미국</option>
+                <option value="WORLD">국가: 전세계</option>
             </select>
             <div class="status-filter-container">
                 <button type="button" id="status-toggle-btn" class="status-toggle-btn">진행상태: 전체</button>
@@ -53,6 +54,17 @@
                 <div id="map-svg-wrapper">
                     <!-- High-fidelity Geographical USA Map -->
                     <svg id="us-map" viewBox="0 0 165.93 96.95" preserveAspectRatio="xMidYMid meet">
+                        <!-- ... (USA paths) ... -->
+                        <!-- [Paths kept as is, but logic will toggle visibility] -->
+                    </svg>
+
+                    <!-- Interactive World Map -->
+                    <svg id="world-map" viewBox="30.767 241.591 784.077 458.627" preserveAspectRatio="xMidYMid meet" style="display: none;">
+                        <g id="world-paths">
+                            <!-- Paths will be injected or kept here if token limit allows -->
+                        </g>
+                        <g id="world-labels"></g>
+                    </svg>
 <defs
    id="defs3068"><linearGradient
    id="linearGradient4789"
