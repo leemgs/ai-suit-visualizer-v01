@@ -34,11 +34,18 @@ let allCases = [];
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
     initMapControls();
-    // Initialize labels after world map is loaded
+    
+    // Initialize US labels immediately (or close to it)
+    setTimeout(initUSLabels, 150);
+
+    // Load world map in background and initialize its labels after
     loadWorldMap().then(() => {
-        setTimeout(initLabels, 100);
+        setTimeout(initWorldLabels, 100);
+    }).catch(err => {
+        console.error("Delayed world map load:", err);
     });
 });
+
 
 async function loadWorldMap() {
     try {
@@ -183,31 +190,46 @@ function updateVisualization(cases, selectedStatuses) {
     // Filter cases by selected statuses
     const activeCases = cases.filter(c => {
         if (!c.status) return false;
-        
-        // Exact match or includes for status strings like "1심 진행중"
         return selectedStatuses.some(s => c.status.includes(s));
     });
 
     const selectedCountry = document.getElementById('country-select').value;
     const stats = {};
-    activeCases.forEach(c => {
-        let loc = null;
-        if (selectedCountry === 'USA') {
-            loc = extractState(c.court);
-        } else {
-            loc = extractCountry(c.country);
-        }
+    
+    // Calculate global metrics for the share info
+    const worldTotal = activeCases.length;
+    const usaCases = activeCases.filter(c => extractState(c.court) !== null);
+    const usaCount = usaCases.length;
 
-        if (loc) {
-            stats[loc] = (stats[loc] || []);
-            stats[loc].push(c);
-        }
-    });
+    let displayCases = [];
+    
+    if (selectedCountry === 'USA') {
+        // Only count and show USA cases
+        displayCases = usaCases;
+        displayCases.forEach(c => {
+            const loc = extractState(c.court);
+            if (loc) {
+                stats[loc] = (stats[loc] || []);
+                stats[loc].push(c);
+            }
+        });
+    } else {
+        // Show all world cases
+        displayCases = activeCases;
+        displayCases.forEach(c => {
+            const loc = extractCountry(c.country);
+            // Even if loc is null (unmapped country), we still count it in the total for World view
+            if (loc) {
+                stats[loc] = (stats[loc] || []);
+                stats[loc].push(c);
+            }
+        });
+    }
 
-    renderStats(activeCases.length, selectedStatuses);
+    renderStats(displayCases.length, selectedStatuses, selectedCountry, worldTotal, usaCount);
     toggleMapDisplay(selectedCountry);
     renderMap(stats, selectedCountry);
-    renderSidebar(activeCases);
+    renderSidebar(displayCases);
 }
 
 function toggleMapDisplay(country) {
@@ -244,11 +266,20 @@ function extractState(courtText) {
     return null;
 }
 
-function renderStats(total, selectedStatuses) {
+function renderStats(total, selectedStatuses, selectedCountry, worldTotal, usaCount) {
     const display = document.getElementById('status-display');
     const chipsContainer = document.getElementById('active-status-chips');
+    const shareContainer = document.getElementById('share-info');
     
     document.querySelector('#status-display .total-count').textContent = total;
+    
+    if (selectedCountry === 'USA' && worldTotal > 0) {
+        const share = Math.round((usaCount / worldTotal) * 100);
+        shareContainer.textContent = `미국건수/전세계건수 (점유율) = ${usaCount}/${worldTotal} (${share}%)`;
+        shareContainer.style.display = 'block';
+    } else {
+        shareContainer.style.display = 'none';
+    }
     
     chipsContainer.innerHTML = "";
     selectedStatuses.forEach(s => {
@@ -259,9 +290,11 @@ function renderStats(total, selectedStatuses) {
     });
 }
 function initLabels() {
+    // This function is now just a fallback or convenience
     initUSLabels();
     initWorldLabels();
 }
+
 
 function initUSLabels() {
     const labelGroup = document.getElementById('state-labels');

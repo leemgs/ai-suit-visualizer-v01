@@ -204,7 +204,7 @@ main {
     transition: transform 0.15s ease-out;
 }
 
-#us-map {
+#us-map, #world-map {
     width: 100%;
     height: 100%;
     filter: drop-shadow(0 20px 40px rgba(0,0,0,0.5));
@@ -232,6 +232,14 @@ main {
     line-height: 1;
     color: var(--accent);
     margin-bottom: 10px;
+}
+
+#status-display .share-info {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
 }
 
 #status-display .total-count::before {

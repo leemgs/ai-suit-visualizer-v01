@@ -47,6 +47,7 @@
             <div id="status-display">
                 <h2>AI Litigation Map</h2>
                 <div class="total-count">0</div>
+                <div id="share-info" class="share-info"></div>
                 <div id="active-status-chips"></div>
             </div>
             
@@ -54,17 +55,6 @@
                 <div id="map-svg-wrapper">
                     <!-- High-fidelity Geographical USA Map -->
                     <svg id="us-map" viewBox="0 0 165.93 96.95" preserveAspectRatio="xMidYMid meet">
-                        <!-- ... (USA paths) ... -->
-                        <!-- [Paths kept as is, but logic will toggle visibility] -->
-                    </svg>
-
-                    <!-- Interactive World Map -->
-                    <svg id="world-map" viewBox="30.767 241.591 784.077 458.627" preserveAspectRatio="xMidYMid meet" style="display: none;">
-                        <g id="world-paths">
-                            <!-- Paths will be injected or kept here if token limit allows -->
-                        </g>
-                        <g id="world-labels"></g>
-                    </svg>
 <defs
    id="defs3068"><linearGradient
    id="linearGradient4789"
@@ -172,6 +162,12 @@
 <path id="WY" class="state state-path" d="m 56.206985,38.883868 0.48,-14.07 -17.1185,-1.252 -1.5201,14.103 z" />
 <g id="state-labels"></g>
 </svg>
+
+                    <!-- Interactive World Map -->
+                    <svg id="world-map" viewBox="30.767 241.591 784.077 458.627" preserveAspectRatio="xMidYMid meet" style="display: none;">
+                        <g id="world-paths"></g>
+                        <g id="world-labels"></g>
+                    </svg>
                 </div>
             </div>
 
