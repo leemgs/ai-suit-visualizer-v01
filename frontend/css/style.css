@@ -612,3 +612,70 @@ main {
 .status-badge-item:hover {
     background: rgba(255,255,255,0.08);
 }
+
+/* New styles for small states list */
+.small-state-list-item {
+    font-size: 1.5px;
+    font-weight: 600;
+    fill: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.small-state-list-item:hover, .small-state-list-item.highlight {
+    fill: #4ade80; /* Green */
+    font-weight: 800;
+    font-size: 1.8px;
+}
+
+.small-state-list-item.has-cases {
+    fill: #fcd34d; /* Yellow if it has cases */
+}
+
+.state-pointer {
+    stroke: #4ade80;
+    stroke-width: 0.15px;
+    stroke-dasharray: 0.2, 0.2; /* Dotted line might look better, or solid as requested */
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+/* Override solid pointer if requested */
+.state-pointer {
+    stroke-dasharray: none; /* Solid line */
+}
+
+.state-path.highlight-green {
+    fill: #4ade80 !important;
+    stroke: #fff !important;
+    stroke-width: 0.3px !important;
+    opacity: 1 !important;
+}
+
+.small-state-list-header {
+    font-size: 1.8px;
+    font-weight: 800;
+    fill: var(--accent);
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.tiny-label {
+    font-size: 0.7px !important;
+    font-weight: 700;
+    paint-order: stroke;
+    stroke: #000;
+    stroke-width: 0.08px;
+    letter-spacing: -0.05px;
+}
+
+.tiny-label.active-label {
+    font-size: 0.85px !important;
+    font-weight: 900;
+    stroke-width: 0.1px;
+}
+
+
+
