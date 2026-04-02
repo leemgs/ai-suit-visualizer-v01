@@ -396,22 +396,13 @@ function initUSLabels() {
     const adjustments = {
         'FL': { dx: 2, dy: 1 }, 'MI': { dx: 1, dy: 2 }, 'LA': { dx: -1, dy: 0 },
         'CA': { dx: -1, dy: 0 }, 'AK': { dx: 0, dy: -2 }, 'HI': { dx: 0, dy: -2 },
-        'NJ': { dx: 4, dy: -1.5 }, 'RI': { dx: 4, dy: 3.5 }, 'DE': { dx: 4, dy: 1 },
-        'MD': { dx: 4, dy: 4 }, 'NH': { dx: 6, dy: -0.5 }, 'CT': { dx: 6, dy: 1.5 },
-        'VT': { dx: 6, dy: -2.5 }, 'MA': { dx: 6, dy: -0.5 }, 'DC': { dx: 4, dy: 6.5 },
+        'NJ': { dx: 0, dy: 0 }, 'RI': { dx: 0, dy: 0 }, 'DE': { dx: 0, dy: 0 },
+        'MD': { dx: 0, dy: 0 }, 'NH': { dx: 0, dy: 0 }, 'CT': { dx: 0, dy: 0 },
+        'VT': { dx: 0, dy: 0 }, 'MA': { dx: 0, dy: 0 }, 'DC': { dx: 0, dy: 0 },
         'ME': { dx: 2, dy: 0 }
     };
 
     const SMALL_STATES = ['MA', 'CT', 'DE', 'DC', 'RI', 'NJ', 'MD'];
-    const listGroup = document.getElementById('small-states-list') || document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    listGroup.id = 'small-states-list';
-    if (!listGroup.parentElement) labelGroup.parentElement.appendChild(listGroup);
-    listGroup.innerHTML = '';
-
-    const ptrGroup = document.getElementById('pointer-group') || document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    ptrGroup.id = 'pointer-group';
-    if (!ptrGroup.parentElement) labelGroup.parentElement.appendChild(ptrGroup);
-    ptrGroup.innerHTML = '';
 
     const statePaths = new Map();
 
@@ -426,77 +417,12 @@ function initUSLabels() {
         }
     });
 
-    let listIndex = 0;
-    const LIST_START_X = 148;
-    const LIST_START_Y = 38;
-    const ROW_SPACING = 3.5;
-    const COL_SPACING = 8;
-
-    // Add Header for Small States
-    const header = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    header.setAttribute('x', LIST_START_X);
-    header.setAttribute('y', LIST_START_Y - 4);
-    header.setAttribute('class', 'small-state-list-header');
-    header.textContent = 'SMALL STATES';
-    listGroup.appendChild(header);
 
     statePaths.forEach((data, id) => {
         const { bbox } = data;
         let x = bbox.x + bbox.width / 2;
         let y = bbox.y + bbox.height / 2;
         
-        if (SMALL_STATES.includes(id)) {
-            // Add to list UI (Keep the list as it provides better UX for litigation counts)
-            const col = Math.floor(listIndex / 4);
-            const row = listIndex % 4;
-            const lx = LIST_START_X + (col * COL_SPACING);
-            const ly = LIST_START_Y + (row * ROW_SPACING);
-            
-            const item = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            item.setAttribute('x', lx);
-            item.setAttribute('y', ly);
-            item.setAttribute('class', 'small-state-list-item');
-            item.setAttribute('data-loc', id);
-            item.textContent = id;
-            listGroup.appendChild(item);
-
-            // Pointer line
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', lx - 1);
-            line.setAttribute('y1', ly - 0.5);
-            line.setAttribute('x2', x);
-            line.setAttribute('y2', y);
-            line.setAttribute('class', 'state-pointer');
-            line.setAttribute('id', `pointer-${id}`);
-            ptrGroup.appendChild(line);
-
-            // Interaction
-            item.addEventListener('mouseover', () => {
-                const path = document.getElementById(id);
-                if (path) path.classList.add('highlight-green');
-                line.style.opacity = '1';
-                item.classList.add('highlight');
-            });
-            item.addEventListener('mouseout', () => {
-                const path = document.getElementById(id);
-                if (path) path.classList.remove('highlight-green');
-                line.style.opacity = '0';
-                item.classList.remove('highlight');
-            });
-            item.addEventListener('click', () => {
-                const path = document.getElementById(id);
-                if (path) path.click();
-            });
-
-            listIndex++;
-            
-            // ALSO add tiny label on map as requested
-            const ady = adjustments[id] ? adjustments[id].dy : 0;
-            const adx = adjustments[id] ? adjustments[id].dx : 2;
-            createLabel(labelGroup, x + adx, y + ady, id, 'state-label tiny-label', id);
-            return; 
-        }
-
         if (adjustments[id]) {
             x += adjustments[id].dx;
             y += adjustments[id].dy;
@@ -550,6 +476,7 @@ function createLabel(group, x, y, id, className, textContent) {
     text.setAttribute('data-loc', id);
     text.textContent = textContent;
     group.appendChild(text);
+    return text;
 }
 
 
@@ -589,10 +516,6 @@ function renderMap(stats, countryType) {
                 labelElem.textContent = `${baseDisplayCode} (${cases.length})`;
                 labelElem.classList.add('active-label');
             }
-            if (itemElem) {
-                itemElem.textContent = `${baseDisplayCode} (${cases.length})`;
-                itemElem.classList.add('has-cases');
-            }
         } else {
             pathEl.onclick = null;
             pathEl.onmouseover = null;
@@ -600,10 +523,6 @@ function renderMap(stats, countryType) {
             if (labelElem) {
                 labelElem.textContent = baseDisplayCode;
                 labelElem.classList.remove('active-label');
-            }
-            if (itemElem) {
-                itemElem.textContent = baseDisplayCode;
-                itemElem.classList.remove('has-cases');
             }
         }
     });
